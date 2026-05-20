@@ -6,6 +6,7 @@ import {
   Inter,
   JetBrains_Mono,
 } from "next/font/google";
+import PlausibleProvider from "next-plausible";
 import { site } from "@/lib/site";
 import { websiteJsonLd } from "@/lib/seo";
 import { MotionPathnameWatcher } from "@/components/motion-link";
@@ -99,8 +100,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body>
-        <MotionPathnameWatcher />
-        {children}
+        <PlausibleProvider
+          domain={process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN!}
+          trackOutboundLinks
+          trackFileDownloads
+          taggedEvents
+        >
+          <MotionPathnameWatcher />
+          {children}
+        </PlausibleProvider>
       </body>
     </html>
   );
