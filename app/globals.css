@@ -1,0 +1,456 @@
+@import "tailwindcss";
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Design tokens — quiet paper, no accent colour. Black on bone.
+   ────────────────────────────────────────────────────────────────────────── */
+
+@theme inline {
+  --color-paper: #f6f4ee;
+  --color-paper-2: #efece2;
+  --color-snow: #fbfaf6;
+  --color-bone: #e8e3d3;
+  --color-ink: #1a1814;
+  --color-ink-2: #4a463d;
+  --color-ink-3: #8a8475;
+  --color-ink-4: #b8b1a1;
+
+  --font-display: "Cormorant Garamond", "EB Garamond", ui-serif, serif;
+  --font-body: "EB Garamond", "Cormorant Garamond", ui-serif, serif;
+  --font-label: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+
+:root {
+  --paper: #f6f4ee;
+  --paper-2: #efece2;
+  --snow: #fbfaf6;
+  --bone: #e8e3d3;
+  --ink: #1a1814;
+  --ink-2: #4a463d;
+  --ink-3: #8a8475;
+  --ink-4: #b8b1a1;
+  --measure: 680px;
+  --bl: 8px;
+
+  --font-display: var(--ff-display), "Cormorant Garamond", ui-serif, serif;
+  --font-body: var(--ff-body), "EB Garamond", ui-serif, serif;
+  --font-label: var(--ff-label), "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--ff-mono), "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #f0eee9;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+body {
+  color: var(--ink);
+  font-family: "EB Garamond", "Cormorant Garamond", ui-serif, serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.75;
+  font-feature-settings: "palt" 1, "kern" 1;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Page — paper background + grain.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.page {
+  position: relative;
+  background: var(--paper);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(rgba(0, 0, 0, 0.025) 1px, transparent 1px),
+    radial-gradient(rgba(0, 0, 0, 0.018) 1px, transparent 1px);
+  background-size: 3px 3px, 7px 7px;
+  background-position: 0 0, 1px 2px;
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+  z-index: 1;
+}
+
+.page > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Type system — never reach for inline font stacks; use a class.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.t-label {
+  font: 300 10.5px / 1.4 var(--font-label);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.t-meta {
+  font: 400 11px / 1.4 var(--font-mono);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.t-num {
+  font: 400 11px / 1 var(--font-mono);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.t-en {
+  font: 400 13px / 1.45 var(--font-body);
+  font-style: italic;
+  color: var(--ink-2);
+  letter-spacing: 0.005em;
+}
+
+.t-display {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-style: italic;
+}
+
+button,
+a {
+  outline: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   The single link pattern: hairline border, fades on hover.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.quiet-link {
+  color: inherit;
+  border-bottom: 0.5px solid var(--bone);
+  padding-bottom: 1px;
+  transition: border-color 0.25s ease, color 0.25s ease;
+}
+
+.quiet-link:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Index / archive / notes rows. Hover is the only motion in the design.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.row {
+  display: grid;
+  align-items: baseline;
+  border-top: 0.5px solid var(--bone);
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.35s ease;
+}
+
+.row:hover {
+  background: rgba(255, 253, 247, 0.55);
+}
+
+.row:hover .reveal-arrow {
+  color: var(--ink);
+  transform: translateX(4px);
+}
+
+.reveal-arrow {
+  font-family: var(--font-body);
+  font-size: 20px;
+  color: var(--ink-4);
+  transition: transform 0.3s ease, color 0.3s ease;
+  display: inline-block;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   View transitions — navigation motion.
+
+   The journal carries three named elements across routes: the reference
+   number (№), the entry title, and the seal. List → detail morphs the
+   number and title from their tabular position into the article header,
+   the seal then resolves in. Detail → detail (prev / next pagination)
+   morphs only the seal — the next essay is a new object, not the same
+   one moving. Root is a soft crossfade beneath all of this.
+
+   Durations follow the hover budget in §6: root 240ms, morph 380ms.
+   Disabled entirely under prefers-reduced-motion.
+   ────────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: no-preference) {
+  .seal-dot {
+    view-transition-name: seal;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 240ms;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 380ms;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Hero — the Loop ring slowly rotates. transform-origin is the SVG centre.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.hero__loop {
+  transform-origin: 50% 50%;
+  animation: hero-loop 60s linear infinite;
+}
+
+@keyframes hero-loop {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__loop {
+    animation: none;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Article body — generous measure, hanging punctuation, no widows.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.prose {
+  max-width: var(--measure);
+  margin: 0 auto;
+}
+
+.prose p {
+  margin: 0 0 28px;
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.75;
+  letter-spacing: 0.005em;
+  color: var(--ink);
+  hanging-punctuation: first allow-end;
+  text-wrap: pretty;
+}
+
+.prose h2 {
+  margin: 64px 0 24px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: 32px;
+  line-height: 1.25;
+  letter-spacing: 0.005em;
+  color: var(--ink);
+}
+
+.prose h3 {
+  margin: 48px 0 16px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+.prose blockquote {
+  margin: 32px 0;
+  padding-left: 24px;
+  border-left: 0.5px solid var(--bone);
+  font-style: italic;
+  color: var(--ink-2);
+}
+
+.prose blockquote p {
+  font-size: 17px;
+  margin-bottom: 16px;
+}
+
+.prose a {
+  color: inherit;
+  border-bottom: 0.5px solid var(--bone);
+  padding-bottom: 1px;
+  transition: border-color 0.25s ease, color 0.25s ease;
+}
+
+.prose a:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 24px;
+  margin: 0 0 28px;
+  font-size: 18px;
+  line-height: 1.75;
+  color: var(--ink);
+}
+
+.prose li {
+  margin-bottom: 8px;
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--paper-2);
+  padding: 0.1em 0.4em;
+  border-radius: 2px;
+  color: var(--ink);
+}
+
+.prose pre {
+  margin: 32px 0;
+  padding: 20px 24px;
+  background: var(--paper-2);
+  border: 0.5px solid var(--bone);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+.prose pre code {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+}
+
+.prose hr {
+  border: 0;
+  border-top: 0.5px solid var(--bone);
+  margin: 48px auto;
+  width: 96px;
+}
+
+.prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 32px auto;
+}
+
+.prose figcaption {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-3);
+  text-align: center;
+  margin-top: 12px;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose strong {
+  font-weight: 500;
+}
+
+.prose .small-caps {
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Responsive
+   ────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 960px) {
+  .frame {
+    padding: 56px 32px !important;
+  }
+
+  .hero {
+    min-height: 360px !important;
+    padding: 16px 0 64px !important;
+  }
+
+  .hero__loop {
+    width: 320px !important;
+    height: 320px !important;
+  }
+
+  .index-row {
+    grid-template-columns: 56px 1fr 56px !important;
+    column-gap: 16px !important;
+  }
+
+  .index-row__excerpt,
+  .index-row__date {
+    display: none !important;
+  }
+
+  .archive-row {
+    grid-template-columns: 56px 1fr 40px !important;
+    column-gap: 16px !important;
+  }
+
+  .archive-row__season,
+  .archive-row__date {
+    display: none !important;
+  }
+
+  .archive-year {
+    font-size: 56px !important;
+  }
+
+  .reading-title {
+    font-size: 36px !important;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .footer-grid > div:last-child {
+    text-align: left !important;
+    justify-self: start !important;
+  }
+
+  .header-grid {
+    grid-template-columns: 1fr auto !important;
+  }
+
+  .header-grid__masthead {
+    display: none !important;
+  }
+}

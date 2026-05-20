@@ -1,0 +1,98 @@
+---
+n: "001"
+title: "Scoring sites by user behaviour"
+date: "2026.05.20"
+excerpt: "A 2015 patent, a 2022 update, and a 2024 spam policy trace one constraint search ranking cannot outrun."
+tags: ["seo", "search"]
+---
+
+<Lead>The patent caps long visits.</Lead> Not because Google distrusts users who linger. It caps them because someone may have walked away from the screen. A page that has been open for an hour, the patent notes, should not count as an hour of satisfaction. So a ceiling is set.
+
+The detail is small. It hides under a stack of formulas in a 2015 patent titled [*Scoring Site Quality*](https://patents.google.com/patent/US9195944B1/en) (US 9,195,944 B1). It is the first clue that what is being measured is not *time*. Time is a proxy. The real object — what Google has been trying to estimate for a long time — is whether a user got what they came for.
+
+That object is hard to name. The patent names it openly. And once it is named, the rest of the patent — and most of what Google has published since — bends toward a single problem. Usefulness is not directly observable. Every signal a ranker uses is therefore a proxy for it. And proxies are not all equally cheap to fake.
+
+Signals a publisher controls — keywords, headings, length, schema markup, internal links — can be pushed by one person in an afternoon. Signals produced by users at scale cannot. A million strangers' clicks, returns, and time-to-back-button do not coordinate; the cost of faking them rises sharply with the scale at which the engine measures them. So the direction of travel falls out before anyone chooses it. A search engine that wants to keep improving has to lean further on the signals its adversaries find least cheap to fake. Behaviour at scale is one of the densest pockets available.
+
+The 2015 patent is the first public slice of Google moving that way.
+
+The mechanism itself is plain. A user clicks a search result, lands on a page, and at some point returns to the search results to keep looking. The interval between click and return is recorded. If the interval is very short, the visit is discarded as too brief to mean anything. If it is very long, the ceiling I just mentioned applies. Different content types receive different baselines: a person can judge an image at a glance, an article in a minute, a video only after watching for a while.
+
+<svg width="100%" viewBox="0 0 680 220" role="img" aria-labelledby="dwell-title dwell-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="dwell-title">How dwell time becomes a signal</title>
+  <desc id="dwell-desc">A user clicks a search result, lands on a page, and returns. The interval between click and return is the dwell signal.</desc>
+  <defs>
+    <marker id="arr-dwell" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M2 1 L8 5 L2 9" fill="none" stroke="#1a1814" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" />
+    </marker>
+  </defs>
+  <rect x="60" y="60" width="140" height="64" rx="3" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="130" y="98" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="16" fill="#1a1814">Search results</text>
+  <rect x="270" y="60" width="140" height="64" rx="3" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="340" y="98" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="16" fill="#1a1814">Page</text>
+  <rect x="480" y="60" width="140" height="64" rx="3" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="550" y="98" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="16" fill="#1a1814">Search results</text>
+  <line x1="206" y1="92" x2="264" y2="92" stroke="#1a1814" strokeWidth="0.5" markerEnd="url(#arr-dwell)" />
+  <text x="235" y="80" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">click</text>
+  <line x1="416" y1="92" x2="474" y2="92" stroke="#1a1814" strokeWidth="0.5" markerEnd="url(#arr-dwell)" />
+  <text x="445" y="80" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">return</text>
+  <line x1="206" y1="160" x2="474" y2="160" stroke="#8a8475" strokeWidth="0.5" />
+  <line x1="206" y1="160" x2="206" y2="150" stroke="#8a8475" strokeWidth="0.5" />
+  <line x1="474" y1="160" x2="474" y2="150" stroke="#8a8475" strokeWidth="0.5" />
+  <text x="340" y="184" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">DWELL INTERVAL</text>
+</svg>
+
+These per-visit measurements are then aggregated and turned into a *site quality score*. Not a page score. A site score.
+
+Three details from the patent are worth slowing down for. Each is what the constraint above looks like in code.
+
+The first is the **unit of evaluation**. A "site" in the patent isn't always a domain. It can be a subdomain, a directory, or a cluster of resources on a server — whatever grouping the system finds useful. A low-quality page doesn't only hurt the URL it appears on. It can pull down the directory it sits in. It can pull down the subdomain. It can pull down the whole collection. The unit moves up because per-page behaviour is sparse: most pages don't have enough visits to score reliably, and aggregating to a collection raises the signal-to-noise ratio. The cost is collateral damage to neighbours of the bad page. The system takes the trade.
+
+<svg width="100%" viewBox="0 0 680 240" role="img" aria-labelledby="unit-title unit-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="unit-title">Where the score is applied</title>
+  <desc id="unit-desc">A site contains subdomains, which contain directories, which contain pages. The quality score can be computed at any level of this nesting.</desc>
+  <rect x="60" y="40" width="560" height="180" rx="4" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="80" y="62" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">site</text>
+  <rect x="110" y="80" width="460" height="120" rx="4" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="130" y="102" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">subdomain</text>
+  <rect x="170" y="120" width="340" height="60" rx="4" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="190" y="142" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">directory</text>
+  <rect x="240" y="150" width="200" height="20" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="340" y="166" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#1a1814">page</text>
+</svg>
+
+The second is **what the score affects**. The natural assumption is *ranking*. The patent lists more: whether to crawl a resource at all, whether to refresh it in the index, whether to add it to the index in the first place. The score governs Google's resource allocation toward the site, not just where the site sits on a results page. A bad score doesn't only bury a page. It can make the crawler less interested in coming back. If a collection isn't worth ranking, it isn't worth looking at.
+
+The third is the **filtering**. The patent is explicit that anomalous behaviour — odd click distributions, suspicious cookies, irregular user-agent patterns, manipulated queries — is discarded before aggregation. This is the forge-resistance argument made operational: the system throws out the cheapest-to-fake fraction of its own input to protect the trustworthiness of the rest.
+
+Read together, these details point somewhere. The evaluation unit has moved up. Not from page to site exactly — pages are still scored — but the *frame* now spans a collection. And the input has moved sideways: from what a page contains to what people do after they land on it.
+
+This makes a familiar form of SEO harder. Keyword density, link graphs, structured markup — these are pushed by the publisher. Behaviour is pulled from the user. The publisher can shape the page; they cannot shape what users do next. They can, indirectly, by genuinely answering the query, which is the long way around.
+
+The shift is from optimising signals to optimising outcomes. The two used to be close enough that gaming the former approximated the latter. The patent is one of several reasons to suspect that distance is widening.
+
+For seven years the trajectory was visible mostly in patents and quiet ranking shifts. In August 2022, Google said it out loud.
+
+The post that launched the ["helpful content update"](https://developers.google.com/search/blog/2022/08/helpful-content-update) introduced what it called, in plain language, a *site-wide signal*. Pages on sites with too much unhelpful content would underperform — all of them, not just the unhelpful ones. The wording reads almost like a paraphrase of the patent:
+
+> Any content — not just unhelpful content — on sites determined to have relatively high amounts of unhelpful content overall is less likely to perform well in Search.
+
+The neighbourhood, named.
+
+The same post introduced an opposition: *people-first* content versus *search-engine-first* content. Read against the proxy frame, this is the publisher-pushed / user-pulled distinction in policy language. The self-assessment list that follows asks publishers to consider whether a reader leaves satisfied, whether they would return again, whether they would search again afterwards for better information elsewhere. These are not content questions. They are behavioural predictions. The publisher is being asked to anticipate the signal the user will generate.
+
+In [March 2024](https://developers.google.com/search/blog/2024/03/core-update-spam-policies), the helpful content system was folded into the core ranking system. The post is explicit: *"There's no longer one signal or system used to do this."* What was a named update in 2022 is now spread across many systems. The trajectory has passed the point of being a feature you can point at.
+
+The same post introduced three new spam policies:
+
+- **Expired domain abuse** — buying a lapsed domain to inherit its past reputation, then hosting low-value content under it.
+- **Scaled content abuse** — producing pages at volume to manipulate ranking, "no matter whether content is produced through automation, human efforts, or some combination."
+- **Site reputation abuse** — third-party pages hosted on a strong domain with little oversight, riding on the host's ranking signals.
+
+All three are the same shape. They are not page-level spam. They are attempts to *borrow reputation* — past reputation, fabricated reputation, parasitic reputation. They are what attackers do once the unit of evaluation has risen above the page. When the score lives at the collection, the gaming moves up to the collection. These policies are not new ideas. They are the patches the trajectory required.
+
+The patent, the update, the policies — three points on one line. A system pushed to lean further on the signals its adversaries can't cheaply forge. Drawn upward toward the collection because per-page behaviour is too sparse to score on its own. And forced, once the collection becomes the unit, to defend the collection's reputation as an attack surface in its own right.
+
+A page is something one person can shape. A site's behavioural footprint, at scale, is not. So the system asks the publisher fewer questions and the user more. Not because users are infallible — but because their answers, at the scale ranking operates, are the most expensive part of the system to forge.
+
+<p style={{ marginTop: 64, marginBottom: 0, fontSize: 14, lineHeight: 1.65, fontStyle: "italic", color: "var(--ink-2)" }}>References — <a href="https://patents.google.com/patent/US9195944B1/en">Scoring Site Quality, <span style={{ fontStyle: "normal", fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.02em" }}>US 9,195,944 B1</span>, Google Inc., 2015.</a> · <a href="https://developers.google.com/search/blog/2022/08/helpful-content-update">"What creators should know about Google's August 2022 helpful content update", Google Search Central Blog.</a> · <a href="https://developers.google.com/search/blog/2024/03/core-update-spam-policies">"What web creators should know about our March 2024 core update and new spam policies", Google Search Central Blog.</a></p>
