@@ -7,9 +7,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "check": "tsc --noEmit && next lint"
+    "check": "tsc --noEmit && eslint ."
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.876.0",
