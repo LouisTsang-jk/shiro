@@ -14,6 +14,8 @@ That object is hard to name. The patent names it openly. And once it is named, t
 
 Signals a publisher controls — keywords, headings, length, schema markup, internal links — can be pushed by one person in an afternoon. Signals produced by users at scale cannot. A million strangers' clicks, returns, and time-to-back-button do not coordinate; the cost of faking them rises sharply with the scale at which the engine measures them. So the direction of travel falls out before anyone chooses it. A search engine that wants to keep improving has to lean further on the signals its adversaries find least cheap to fake. Behaviour at scale is one of the densest pockets available.
 
+## The 2015 patent
+
 The 2015 patent is the first public slice of Google moving that way.
 
 The mechanism itself is plain. A user clicks a search result, lands on a page, and at some point returns to the search results to keep looking. The interval between click and return is recorded. If the interval is very short, the visit is discarded as too brief to mean anything. If it is very long, the ceiling I just mentioned applies. Different content types receive different baselines: a person can judge an image at a glance, an article in a minute, a video only after watching for a while.
@@ -44,6 +46,8 @@ The mechanism itself is plain. A user clicks a search result, lands on a page, a
 
 These per-visit measurements are then aggregated and turned into a *site quality score*. Not a page score. A site score.
 
+## Three details
+
 Three details from the patent are worth slowing down for. Each is what the constraint above looks like in code.
 
 The first is the **unit of evaluation**. A "site" in the patent isn't always a domain. It can be a subdomain, a directory, or a cluster of resources on a server — whatever grouping the system finds useful. A low-quality page doesn't only hurt the URL it appears on. It can pull down the directory it sits in. It can pull down the subdomain. It can pull down the whole collection. The unit moves up because per-page behaviour is sparse: most pages don't have enough visits to score reliably, and aggregating to a collection raises the signal-to-noise ratio. The cost is collateral damage to neighbours of the bad page. The system takes the trade.
@@ -71,6 +75,8 @@ This makes a familiar form of SEO harder. Keyword density, link graphs, structur
 
 The shift is from optimising signals to optimising outcomes. The two used to be close enough that gaming the former approximated the latter. The patent is one of several reasons to suspect that distance is widening.
 
+## The 2022 update
+
 For seven years the trajectory was visible mostly in patents and quiet ranking shifts. In August 2022, Google said it out loud.
 
 The post that launched the ["helpful content update"](https://developers.google.com/search/blog/2022/08/helpful-content-update) introduced what it called, in plain language, a *site-wide signal*. Pages on sites with too much unhelpful content would underperform — all of them, not just the unhelpful ones. The wording reads almost like a paraphrase of the patent:
@@ -80,6 +86,8 @@ The post that launched the ["helpful content update"](https://developers.google.
 The neighbourhood, named.
 
 The same post introduced an opposition: *people-first* content versus *search-engine-first* content. Read against the proxy frame, this is the publisher-pushed / user-pulled distinction in policy language. The self-assessment list that follows asks publishers to consider whether a reader leaves satisfied, whether they would return again, whether they would search again afterwards for better information elsewhere. These are not content questions. They are behavioural predictions. The publisher is being asked to anticipate the signal the user will generate.
+
+## The 2024 policies
 
 In [March 2024](https://developers.google.com/search/blog/2024/03/core-update-spam-policies), the helpful content system was folded into the core ranking system. The post is explicit: *"There's no longer one signal or system used to do this."* What was a named update in 2022 is now spread across many systems. The trajectory has passed the point of being a feature you can point at.
 
@@ -91,8 +99,14 @@ The same post introduced three new spam policies:
 
 All three are the same shape. They are not page-level spam. They are attempts to *borrow reputation* — past reputation, fabricated reputation, parasitic reputation. They are what attackers do once the unit of evaluation has risen above the page. When the score lives at the collection, the gaming moves up to the collection. These policies are not new ideas. They are the patches the trajectory required.
 
+## Three points on one line
+
 The patent, the update, the policies — three points on one line. A system pushed to lean further on the signals its adversaries can't cheaply forge. Drawn upward toward the collection because per-page behaviour is too sparse to score on its own. And forced, once the collection becomes the unit, to defend the collection's reputation as an attack surface in its own right.
 
 A page is something one person can shape. A site's behavioural footprint, at scale, is not. So the system asks the publisher fewer questions and the user more. Not because users are infallible — but because their answers, at the scale ranking operates, are the most expensive part of the system to forge.
 
-<p style={{ marginTop: 64, marginBottom: 0, fontSize: 14, lineHeight: 1.65, fontStyle: "italic", color: "var(--ink-2)" }}>References — <a href="https://patents.google.com/patent/US9195944B1/en">Scoring Site Quality, <span style={{ fontStyle: "normal", fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.02em" }}>US 9,195,944 B1</span>, Google Inc., 2015.</a> · <a href="https://developers.google.com/search/blog/2022/08/helpful-content-update">"What creators should know about Google's August 2022 helpful content update", Google Search Central Blog.</a> · <a href="https://developers.google.com/search/blog/2024/03/core-update-spam-policies">"What web creators should know about our March 2024 core update and new spam policies", Google Search Central Blog.</a></p>
+<References>
+  <Reference href="https://patents.google.com/patent/US9195944B1/en">Scoring Site Quality, US 9,195,944 B1, Google Inc., 2015.</Reference>
+  <Reference href="https://developers.google.com/search/blog/2022/08/helpful-content-update">"What creators should know about Google's August 2022 helpful content update", Google Search Central Blog.</Reference>
+  <Reference href="https://developers.google.com/search/blog/2024/03/core-update-spam-policies">"What web creators should know about our March 2024 core update and new spam policies", Google Search Central Blog.</Reference>
+</References>

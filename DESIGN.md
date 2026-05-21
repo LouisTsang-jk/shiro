@@ -288,9 +288,14 @@ The design is deliberately quiet. Animation budgets are tiny.
   - All morph durations: 380ms `cubic-bezier(0.2, 0, 0, 1)`. Entirely disabled under `prefers-reduced-motion`.
 - **Cursor**: default behaviour. `pointer` is set only on `.row` (which wraps an anchor).
 
-### 6.1 The `.quiet-link` pattern
+### 6.1 Inline links
 
-All link-like elements share a single style: inherit colour, no underline, a 0.5px bone bottom-border, 1px padding-bottom. On hover the border goes to `--ink` and the colour to `--ink`. Used for any inline reference to another page or essay.
+Two related patterns, both monochromatic:
+
+- **`.prose a` — inline links in article body.** Default: a 0.5px `--ink-3` bottom-border, 1px padding-bottom. On hover the border and colour both go to `--ink`. The underline is always visible — readers must be able to identify a link without hovering.
+- **`.quiet-link` — links elsewhere (nav-adjacent, masthead-adjacent).** Same shape, but the default border is `--bone` (near-invisible); the link only reveals itself on hover. Used where the link is structural rather than a reference to follow mid-read.
+
+Both patterns inherit text colour and avoid any chromatic mark. There is no third link style.
 
 ---
 

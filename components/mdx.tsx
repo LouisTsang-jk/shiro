@@ -3,6 +3,9 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import remarkSmartypants from "remark-smartypants";
 import rehypeSlug from "rehype-slug";
+import { ClaudeReplyDemo, ClaudeReplySource } from "./claude-html-demo";
+import { ImagineSpecSource } from "./imagine-spec-source";
+import { Reference, References } from "./references";
 
 function MDXAnchor({
   children,
@@ -30,6 +33,11 @@ function Lead({ children }: { children: ReactNode }) {
 const components = {
   a: MDXAnchor,
   Lead,
+  ClaudeReplyDemo,
+  ClaudeReplySource,
+  ImagineSpecSource,
+  References,
+  Reference,
 };
 
 type MDXContentProps = {

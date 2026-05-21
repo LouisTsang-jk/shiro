@@ -1,0 +1,188 @@
+---
+n: "003"
+title: "Building a blog inside Claude"
+date: "2026.05.21"
+excerpt: "A blog designed, built, and written end-to-end by Claude. The real change is not the tooling — it is how writing begins."
+tags: ["agents", "writing"]
+---
+
+<Lead>You are reading this on a blog that was designed by Claude, coded by Claude, and written by Claude.</Lead> None of the lines in front of you — the typography, the rhythm, the words — went through a human hand without first going through a model.
+
+I do not write this to perform. I write it because the path that got me here is short, and it points at a change worth naming.
+
+## The pipeline
+
+I opened Claude Design and told it I wanted a blog in the spirit of Kenya Hara — bone paper, generous margins, the typography subdued, the colour reduced to black and bone. It produced a layout. I clicked *Export*, which handed the design to Claude Code as a structured spec. Claude Code stood up a Next.js project with Tailwind, installed MDX, wrote the routes, set the type stack. A few hours later there was a working site.
+
+<figure style={{ margin: "32px 0", padding: 0 }}>
+<svg width="100%" viewBox="0 0 680 240" role="img" aria-labelledby="svg1-title svg1-desc">
+  <title id="svg1-title">The handoff pipeline</title>
+  <desc id="svg1-desc">Claude Design exports a spec to Claude Code, which scaffolds the Next.js site. DESIGN.md sits beneath as a shared constraint that Claude Code reads on every change.</desc>
+  <defs>
+    <marker id="arr-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+    </marker>
+  </defs>
+  <rect x="80" y="60" width="140" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="150" y="80" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">CLAUDE DESIGN</text>
+  <text x="150" y="98" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink-3)">design + spec</text>
+  <rect x="270" y="60" width="140" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="340" y="80" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">CLAUDE CODE</text>
+  <text x="340" y="98" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink-3)">scaffold + build</text>
+  <rect x="460" y="60" width="140" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="530" y="80" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">STATIC SITE</text>
+  <text x="530" y="98" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink-3)">Next.js, MDX</text>
+  <line x1="220" y1="84" x2="270" y2="84" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-1)" />
+  <line x1="410" y1="84" x2="460" y2="84" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-1)" />
+  <text x="245" y="74" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">export</text>
+  <text x="435" y="74" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">build</text>
+  <rect x="270" y="160" width="140" height="48" fill="none" stroke="var(--ink-3)" strokeWidth="0.5" strokeDasharray="3 3" />
+  <text x="340" y="182" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="11" fill="var(--ink)">DESIGN.md</text>
+  <text x="340" y="198" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">shared constraint</text>
+  <line x1="340" y1="160" x2="340" y2="108" stroke="var(--ink-3)" strokeWidth="0.5" strokeDasharray="3 3" markerEnd="url(#arr-1)" />
+  <text x="352" y="138" textAnchor="start" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">reads</text>
+</svg>
+</figure>
+
+The handoff is the unobvious part. The output of one model becomes the input of another — and the input is not pixels or a Figma file. It is a description. Type scale. Spacing scale. Component intentions. The receiving model reads the description the way a careful engineer reads a brief — and applies it, without ego.
+
+The thing that holds it together is one file: `DESIGN.md`. The design system as plain English. Reading measure is 680 pixels. Vertical rhythm snaps to multiples of eight. Four type faces, no fifth. No accent colour, anywhere — if you reach for one, the design is wrong.
+
+A design system in Figma is a library for humans. `DESIGN.md` is a library for agents. Every future change Claude Code makes — adding a page, restyling a component, building a new view — reads this file first. It is not documentation. It is constraint, in a form a model can apply.
+
+## Writing as a skill
+
+There is no CMS. Every essay and note in this blog is an MDX file checked into the repo. The site is statically generated by Next.js. Writing a new piece means creating a new file, which means asking an agent to help me write that file.
+
+The collaboration runs through a thing Claude Code calls a Skill. A skill is a small markdown document that describes how I want the model to behave on a specific task. Not what to produce, but *how to collaborate*. Mine, `new-essay`, runs in five stages:
+
+<figure style={{ margin: "32px 0", padding: 0 }}>
+<svg width="100%" viewBox="0 0 680 170" role="img" aria-labelledby="svg2-title svg2-desc">
+  <title id="svg2-title">The skill protocol</title>
+  <desc id="svg2-desc">Five stages: understand, outline, draft, revise, ship. Each gates entry to the next.</desc>
+  <defs>
+    <marker id="arr-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+    </marker>
+  </defs>
+  <rect x="46" y="50" width="105" height="52" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="98.5" y="70" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="10" fill="var(--ink-3)">01</text>
+  <text x="98.5" y="90" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">UNDERSTAND</text>
+  <text x="98.5" y="124" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">restate + ask</text>
+  <rect x="167" y="50" width="105" height="52" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="219.5" y="70" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="10" fill="var(--ink-3)">02</text>
+  <text x="219.5" y="90" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">OUTLINE</text>
+  <text x="219.5" y="124" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">propose, wait</text>
+  <rect x="288" y="50" width="105" height="52" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="340.5" y="70" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="10" fill="var(--ink-3)">03</text>
+  <text x="340.5" y="90" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">DRAFT</text>
+  <text x="340.5" y="124" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">one pass</text>
+  <rect x="409" y="50" width="105" height="52" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="461.5" y="70" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="10" fill="var(--ink-3)">04</text>
+  <text x="461.5" y="90" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">REVISE</text>
+  <text x="461.5" y="124" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">cut weakest</text>
+  <rect x="530" y="50" width="105" height="52" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="582.5" y="70" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="10" fill="var(--ink-3)">05</text>
+  <text x="582.5" y="90" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">SHIP</text>
+  <text x="582.5" y="124" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">file + check</text>
+  <line x1="151" y1="76" x2="167" y2="76" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-2)" />
+  <line x1="272" y1="76" x2="288" y2="76" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-2)" />
+  <line x1="393" y1="76" x2="409" y2="76" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-2)" />
+  <line x1="514" y1="76" x2="530" y2="76" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-2)" />
+</svg>
+</figure>
+
+The corresponding file looks roughly like this:
+
+```yaml
+---
+name: new-essay
+description: Help me write an English essay on my shiro blog.
+---
+
+## Stage 1 — Understand
+Do not start writing. First, restate what you heard in one sentence.
+Then ask 1–3 specific gaps. No checklist questions.
+
+## Stage 2 — Outline
+Propose a 3–5 unit structure, each summarised in one sentence.
+Wait for confirmation. Do not write prose yet.
+
+## Stage 3 — Draft
+Write the full English draft in one pass. Thoughtful, restrained,
+concept-driven. Short sentences. Concrete after abstract.
+No "delve", "unpack", "in conclusion".
+
+## Stage 4 — Revise
+Take feedback. Cut the weakest paragraph rather than compress
+the whole thing.
+
+## Stage 5 — Ship
+Write to content/essays/<slug>.mdx, run pnpm check, report.
+```
+
+Every essay on this blog — including the one you are reading — went through these five stages with Claude. The model knows what to ask, when to wait, when to write.
+
+The meta-prompt that produced this skill was, in essence, this:
+
+> I want a skill for writing essays on my blog. Voice: thoughtful, restrained — Paul Graham × Maggie Appleton. The skill should not let you draft until I have confirmed a one-sentence core and a paragraph-level outline. Hard constraints: short sentences; no "delve" / "unpack" / "let's explore"; first person sparing; conclusion implied rather than stated. Files go to `content/essays` as MDX with frontmatter. At the end, run `pnpm check`. Make the skill teach you how to collaborate, not what to produce.
+
+That paragraph became two hundred lines of skill markdown, versioned at `.claude/skills/new-essay/SKILL.md`. Once it exists, it never has to be written again.
+
+## What actually changed
+
+So that is the stack. Design in Claude Design, code in Claude Code, content in Skills, all sitting on top of Next.js static generation and a flat folder of MDX files. No CMS. No database. No admin panel. The blog is a codebase. Every change — visual, structural, editorial — is a commit.
+
+But the stack is not what changed. The stack is downstream.
+
+What changed is how writing begins.
+
+For years I had a folder of half-thoughts. Notes in Apple Notes, snippets in Things, voice memos I never transcribed. When I sat down to write a blog post, the work was not really *writing* — it was reconstruction. Pulling fragments out of my head, arranging them, finding the through-line, then producing prose. The friction was so high that most of the folder stayed in the folder.
+
+What an agent does, when you write with one, is take over the reconstruction step. You speak in fragments. *I want to say something about X, also Y is related, also there was this thing last week.* The model does not write the essay yet. It restates: *I hear you saying X — is that right?* It asks: *do you want to open from a scene or from a claim? Is there a counter-example?* The fragments come out of your head not as prose, but as answers.
+
+<figure style={{ margin: "32px 0", padding: 0 }}>
+<svg width="100%" viewBox="0 0 680 250" role="img" aria-labelledby="svg3-title svg3-desc">
+  <title id="svg3-title">The writing shift</title>
+  <desc id="svg3-desc">Before: fragments to prose required manual reconstruction in your head. After: an agent breaks reconstruction into conversation and outline.</desc>
+  <defs>
+    <marker id="arr-3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+    </marker>
+  </defs>
+  <text x="40" y="52" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink-3)">BEFORE</text>
+  <rect x="80" y="64" width="120" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="140" y="92" textAnchor="middle" fontFamily="var(--font-body)" fontSize="13" fontStyle="italic" fill="var(--ink)">Fragments</text>
+  <rect x="220" y="64" width="240" height="48" fill="var(--bone)" stroke="none" />
+  <text x="340" y="86" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink-2)">MANUAL RECONSTRUCTION</text>
+  <text x="340" y="102" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">— done alone, in your head</text>
+  <rect x="480" y="64" width="120" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="540" y="92" textAnchor="middle" fontFamily="var(--font-body)" fontSize="13" fontStyle="italic" fill="var(--ink)">Prose</text>
+  <line x1="200" y1="88" x2="220" y2="88" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-3)" />
+  <line x1="460" y1="88" x2="480" y2="88" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-3)" />
+  <text x="40" y="172" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink-3)">AFTER</text>
+  <rect x="80" y="184" width="90" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="125" y="212" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink)">Fragments</text>
+  <line x1="170" y1="208" x2="230" y2="208" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-3)" />
+  <rect x="230" y="184" width="120" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="290" y="212" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink)">Conversation</text>
+  <line x1="350" y1="208" x2="380" y2="208" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-3)" />
+  <rect x="380" y="184" width="90" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="425" y="212" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink)">Outline</text>
+  <line x1="470" y1="208" x2="510" y2="208" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-3)" />
+  <rect x="510" y="184" width="90" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="555" y="212" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink)">Prose</text>
+</svg>
+</figure>
+
+By the time the outline is agreed, the essay is already half-thought. The writing is the easy part.
+
+This is not a productivity claim. It is closer to the opposite. The agent makes the *thinking* easier, not the typing. Writing a blog post used to require having a finished idea. Now it is a way to *find* the finished idea.
+
+There is a quieter consequence. When the cost of writing something down drops, the threshold of what is worth writing down drops with it. Notes on this blog are short — three to five sentences, no title, the text is the title. They exist because the friction of saving an observation as a note is now roughly the friction of having the observation. The two collapse.
+
+A folder of half-thoughts becomes a published archive. Not because I became more diligent. Because the path from fragment to published was shortened to the point that diligence stopped being the bottleneck.
+
+I do not yet know what to call this kind of blog. Not a journal — too structured. Not a publication — too quiet. Something like a trace. The output of a person thinking, with a tool patient enough to keep asking what came next.
+
+The blog is no longer where you put what you finished thinking. It is where the thinking happens, and what remains.

@@ -303,7 +303,7 @@ button {
 
 .prose a {
   color: inherit;
-  border-bottom: 0.5px solid var(--bone);
+  border-bottom: 0.5px solid var(--ink-3);
   padding-bottom: 1px;
   transition: border-color 0.25s ease, color 0.25s ease;
 }
@@ -386,6 +386,75 @@ button {
 .prose .small-caps {
   font-variant-caps: all-small-caps;
   letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   References — the endnote block at the foot of an essay. One line per
+   citation, mono numerals, hairline above. Italic body for the text.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.prose .references {
+  margin: 80px 0 0;
+  padding-top: 32px;
+  border-top: 0.5px solid var(--bone);
+}
+
+.prose .references__label {
+  font: 300 10.5px / 1.4 var(--font-label);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 24px;
+}
+
+.prose .references__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  counter-reset: ref;
+  font-size: 14px;
+}
+
+.prose .references__item {
+  position: relative;
+  padding-left: 32px;
+  margin: 0 0 12px;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink-2);
+  counter-increment: ref;
+}
+
+.prose .references__item:last-child {
+  margin-bottom: 0;
+}
+
+.prose .references__item::before {
+  content: counter(ref);
+  position: absolute;
+  left: 0;
+  top: 2px;
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 11px;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.prose .references__link {
+  color: inherit;
+  border-bottom: 0.5px solid var(--ink-3);
+  padding-bottom: 1px;
+  transition: border-color 0.25s ease, color 0.25s ease;
+}
+
+.prose .references__link:hover {
+  border-color: var(--ink);
   color: var(--ink);
 }
 

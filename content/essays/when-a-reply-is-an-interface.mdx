@@ -1,0 +1,188 @@
+---
+n: "002"
+title: "When a reply is an interface"
+date: "2026.05.21"
+excerpt: "HTML over Markdown, an inline-rendered demo, and why an agent's reply ships its styles inline rather than via Tailwind."
+tags: ["llm", "design"]
+---
+
+<Lead>Replies have begun arriving as pages.</Lead> One extra line at the end of a prompt — *structure your response as HTML* — and the reply comes back as a small page instead of a document. Karpathy mentioned this in passing on X in May, after [Thariq Shihipar of the Claude Code team had written it up](https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html). The Claude blog gave the practice a title: *The unreasonable effectiveness of HTML*. Simon Willison [reconsidered his Markdown default](https://simonwillison.net/2026/May/8/unreasonable-effectiveness-of-html/) the same week. Google [packaged the same shift into the Gemini app](https://research.google/blog/generative-ui-a-rich-custom-visual-interactive-user-experience-for-any-prompt/) under the label *Generative UI*. What is being noticed is not a new format. It is what an agent's reply already wants to be.
+
+For a while Markdown was the right default for a defensible reason. In the GPT-4 era the context window was 8,192 tokens; Markdown's token-economy over HTML was worth real money. That constraint has lifted. The default lagged because defaults always lag.
+
+## The four properties
+
+Once the token argument is gone, the two formats separate on four properties.
+
+The first is *density*. Markdown gives the writer headings, lists, tables, code blocks. HTML gives the writer those plus CSS, SVG, images, canvas, layout, and arbitrary interaction. A diagram in Markdown is an ASCII tree. A diagram in HTML is an SVG with arrows and annotations that line up.
+
+The second is *readability under length*. Past about a hundred lines, Markdown is a wall. Shihipar's wry observation is that he himself stops reading at that point, and he is the *author* of the reply. A 200-line spec rendered as a page — a table of contents pinned to one side, status pills, appendices folded — is something a colleague will open. The information is the same. The reading rate is not.
+
+The third is *shareability*. A Markdown file needs a renderer. An `.html` file *is* the renderer. Upload it, send the link, the reader opens the page directly.
+
+The fourth is *interactivity*. A static report cannot be argued with. An interactive report — drag the priority slider, watch the table re-sort, hit *copy as JSON* — closes the loop back to the conversation that produced it. The Claude Code post catalogues these throwaway interfaces: a kanban for ticket triage, a feature-flag editor that warns about dependencies, a side-by-side prompt comparator with a live token count. Each is generated once to answer one question, then discarded.
+
+What is shifting is not the *format* of the reply. It is the *category*. Markdown is a document. HTML, in this usage, is an interface — temporary, single-use, generated on the way to a decision.
+
+## A division of labour
+
+A useful clarification before going further. This is not "Markdown is finished." Markdown remains the right default for *sources* — for `README.md`, for `CLAUDE.md`, for anything edited version-by-version and merged in git. The clean split, once the dust settles, is roughly this: Markdown for what is maintained, HTML for what is read, JSON or YAML for what is passed between systems.
+
+<svg width="100%" viewBox="0 0 680 220" role="img" aria-labelledby="layers-title layers-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="layers-title">A division of labour across three text formats</title>
+  <desc id="layers-desc">Markdown holds what is maintained — readmes, project guides, content sources. HTML holds what is read — reports, specs, throwaway interfaces. JSON or YAML holds what is passed between systems — API payloads, configuration, structured data. Each format is named for the verb its tooling does best: diffs cleanly, renders cleanly, parses cleanly.</desc>
+
+  <text x="340" y="20" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">WHAT EACH FORMAT IS GOOD FOR</text>
+
+  <text x="140" y="58" textAnchor="middle" fontFamily="Cormorant Garamond, EB Garamond, serif" fontStyle="italic" fontWeight="400" fontSize="22" fill="#1a1814">Markdown</text>
+  <text x="340" y="58" textAnchor="middle" fontFamily="Cormorant Garamond, EB Garamond, serif" fontStyle="italic" fontWeight="400" fontSize="22" fill="#1a1814">HTML</text>
+  <text x="540" y="58" textAnchor="middle" fontFamily="Cormorant Garamond, EB Garamond, serif" fontStyle="italic" fontWeight="400" fontSize="22" fill="#1a1814">JSON / YAML</text>
+
+  <line x1="40" y1="76" x2="640" y2="76" stroke="#b8b1a1" strokeWidth="0.5" />
+
+  <text x="140" y="98" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">MAINTAINED</text>
+  <text x="340" y="98" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">READ</text>
+  <text x="540" y="98" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">PASSED</text>
+
+  <text x="140" y="128" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">README.md, CLAUDE.md,</text>
+  <text x="140" y="146" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">content sources</text>
+
+  <text x="340" y="128" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">reports, specs,</text>
+  <text x="340" y="146" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">throwaway interfaces</text>
+
+  <text x="540" y="128" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">API payloads,</text>
+  <text x="540" y="146" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">config, structured data</text>
+
+  <line x1="40" y1="172" x2="640" y2="172" stroke="#b8b1a1" strokeWidth="0.5" />
+
+  <text x="140" y="194" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">diffs cleanly</text>
+  <text x="340" y="194" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">renders cleanly</text>
+  <text x="540" y="194" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">parses cleanly</text>
+</svg>
+
+Each layer's strength is obvious once it is named. Markdown diffs cleanly. HTML renders cleanly. JSON parses cleanly. The mistake was asking any one of them to do the others' jobs.
+
+## Inside the inline sandbox
+
+The newest fold of this shift is happening inside the chat itself. Not as Markdown, not as an Artifact, a third thing in the middle: the reply renders as HTML directly inline in the conversation, in a sandbox the model writes for the moment and the conversation immediately runs.
+
+The sandbox is small, and its boundaries are worth knowing.
+
+- The HTML is sandboxed and ephemeral. Every re-render goes through a tool call; state does not survive across messages.
+- Network requests and external scripts are restricted to a CDN whitelist — cdnjs, esm.sh, jsdelivr, unpkg. The sandbox cannot reach your own API or your MCP servers.
+- There is no `localStorage`. There is no routing. State is whatever the JavaScript holds in memory.
+- A single bridge, `sendPrompt(text)`, posts a message back into the conversation. This is what lets a button inside the rendered widget say *Save changes* and have the result return as the next turn.
+
+What this is *for* — a calculator, a flow diagram, an explanation with parameters one can vary, a lightweight dashboard, a form mockup — is clear in five minutes. What it is *not* for — anything needing a backend, login, persistence, cross-session memory — is also clear: that is what Artifacts (with `window.storage`) or a real Claude API integration exist to do.
+
+Below is one such reply: a form that updates a live JSON state object as the reader interacts with it. The two buttons at the bottom would normally call back into the conversation; in the iframe here they fall through to the browser console.
+
+<ClaudeReplyDemo />
+
+The source — the HTML the model actually emitted — is below.
+
+<ClaudeReplySource />
+
+## Why the styles are inline
+
+One detail of that source is worth pausing on. Every style is **inline**. No `class=`, no Tailwind utility, no external stylesheet. `style="display: flex; flex-direction: column; gap: 1.5rem;"` and so on, all the way down. This is not laziness. It is the *only* form that fits the medium.
+
+Four reasons.
+
+First, there is no build step. Tailwind is a compiler — utility classes like `text-blue-500` and `gap-4` exist because a build pass scans the source, generates the corresponding CSS, and injects a stylesheet. The chat sandbox has none of that. The model emits raw HTML; the conversation pastes it onto the page. A `class="text-blue-500"` would do nothing because nothing translated it.
+
+Second, streaming rendering rules out external stylesheets. The reply does not arrive whole. It streams in, token by token, and the chat client renders each token as it lands. An external stylesheet — or any utility class system that depends on one — opens a window between the markup arriving and the matching CSS arriving. Inside that window the element is visible but unstyled. Inline styles close that window: the style arrives with the element and the page assembles in place, never flashing. Anthropic's own guidance for the chat sandbox is explicit about this — *prefer inline `style="..."` over `<style>` blocks; inputs and controls must look correct mid-stream.*
+
+<svg width="100%" viewBox="0 0 680 260" role="img" aria-labelledby="stream-title stream-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="stream-title">Streaming render: external stylesheet versus inline styles</title>
+  <desc id="stream-desc">Five tokens arrive over time. With an external stylesheet the first four render as outlines — visible but unstyled — and only the fifth renders styled, once the stylesheet has loaded. The moment of catch-up is the flicker. With inline styles every token arrives already styled and the page assembles in place.</desc>
+
+  <text x="340" y="20" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">STREAMING RENDER</text>
+
+  <text x="60" y="80" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">External stylesheet</text>
+
+  <rect x="240" y="60" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <rect x="320" y="60" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <rect x="400" y="60" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <rect x="480" y="60" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+
+  <rect x="560" y="60" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <line x1="568" y1="74" x2="612" y2="74" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="568" y1="84" x2="600" y2="84" stroke="#1a1814" strokeWidth="0.5" />
+
+  <line x1="550" y1="50" x2="550" y2="106" stroke="#8a8475" strokeWidth="0.5" strokeDasharray="2 3" />
+  <text x="550" y="44" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="12" fill="#4a463d">stylesheet arrives</text>
+  <text x="550" y="122" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="11" fill="#8a8475">flicker</text>
+
+  <text x="60" y="190" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">Inline styles</text>
+
+  <rect x="240" y="170" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <line x1="248" y1="184" x2="292" y2="184" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="248" y1="194" x2="280" y2="194" stroke="#1a1814" strokeWidth="0.5" />
+
+  <rect x="320" y="170" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <line x1="328" y1="184" x2="372" y2="184" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="328" y1="194" x2="360" y2="194" stroke="#1a1814" strokeWidth="0.5" />
+
+  <rect x="400" y="170" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <line x1="408" y1="184" x2="452" y2="184" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="408" y1="194" x2="440" y2="194" stroke="#1a1814" strokeWidth="0.5" />
+
+  <rect x="480" y="170" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <line x1="488" y1="184" x2="532" y2="184" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="488" y1="194" x2="520" y2="194" stroke="#1a1814" strokeWidth="0.5" />
+
+  <rect x="560" y="170" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <line x1="568" y1="184" x2="612" y2="184" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="568" y1="194" x2="600" y2="194" stroke="#1a1814" strokeWidth="0.5" />
+
+  <line x1="206" y1="228" x2="624" y2="228" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="206" y1="228" x2="206" y2="222" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="624" y1="228" x2="624" y2="222" stroke="#b8b1a1" strokeWidth="0.5" />
+  <text x="415" y="246" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">RENDER TIME</text>
+</svg>
+
+Third, the host provides design *tokens*, not utilities. Look again at the reply's CSS variables: `var(--color-text-secondary)`, `var(--color-text-info)`, `var(--color-background-secondary)`, `var(--border-radius-md)`, `var(--font-mono)`. These are injected by Claude's chat shell, in light and dark variants. The model writes against the variables it is offered; the variables are the host's vocabulary. Tailwind would be a parallel vocabulary the host does not speak.
+
+Fourth, inline styles are portable. The output is one cell in a long conversation; it may be copied, pasted into a doc, dropped into a colleague's chat, opened later as a file. Each of those moves would strip a separate stylesheet. Inline styles travel.
+
+Behind all four is a quieter property of the medium. The model produces all of this in *one pass*. It cannot iterate on a stylesheet, see how the page rendered, edit selectors, re-run. In a single-pass generation, every styling decision has to live next to the markup that depends on it. Inline is the form a single-pass document takes.
+
+Put together, the practice is a tell about what the reply *is*. A reply written in Tailwind would presume a host that compiles Tailwind. A reply written in CSS variables presumes only a host willing to share its tokens — and so the reply is portable across hosts that share that shape: Claude's chat, an Artifact, an exported file. Inline-styled HTML is the form a guest takes when its only contract with the host is *I will hand you my variables*.
+
+## Consistency without a compiler
+
+Tokens explain *what colour and what radius*. They do not explain *what a widget is*. They cannot say that a metric is a single large numeral over a quiet label, that a thirty-row table needs a sticky header, that a bar chart with one series must not lean on colour alone, that *flat* means flat — no gradients, no shadows, no noise. Each of those is a decision the host holds an opinion about. None of them is a value a CSS variable can hold.
+
+The usual answer to this gap is a component library: `<Card>`, `<MetricBlock>`, `<DataTable>`, written once and imported everywhere. The chat sandbox cannot use that answer. There is no import; there is no build; the model produces one HTML string in one pass and the page renders it. The host cannot ship components — it has no compiler to install them with. What the host *can* ship is the model's *context*. So the spec moves into the prompt.
+
+What sits in the prompt is a Markdown document several thousand words long, pulled in by an internal tool — `read_me` — the moment the model reaches for a visual reply. Inside Anthropic it goes by *Imagine — Visual Creation Suite*. It opens with five modules the model requests à la carte — *diagram*, *mockup*, *interactive*, *chart*, *art* — and continues into a core design system every module shares, a UI component catalogue, a bridge spec, and the full table of CSS variables in both light and dark. Above all of it sits a philosophy stated in three words: *seamless, flat, compact*.
+
+The rules themselves follow. They are the interesting part — concrete to the level of irritation, written like negative space:
+
+<ImagineSpecSource />
+
+Read past the first few bullets and what's striking isn't the strictness, it's the *content*. The rules are mostly not aesthetic preferences. They are a catalogue of failure modes: flicker during streaming, the iframe collapsing because something was `position: fixed`, an icon class that doesn't exist because the model reached for a `-filled` Tabler suffix that isn't preloaded, a `display: none` region whose content streamed invisibly and never came back. Each line names a specific way the model has produced a broken widget before, and writes a flat *don't* next to it. The closest thing on a normal team is a senior reviewer's post-incident memo — except the memo here runs *in front of* every generation, not after.
+
+Two short clauses give the flavour. *"Two weights only: 400 regular, 500 bold. Never use 600 or 700 — they look heavy against the host UI."* The rule is not about typography in the abstract; it is about *fit* with one specific host's surface. *"Round every displayed number. JS float math leaks artifacts — `0.1 + 0.2` gives `0.30000000000000004`."* The model is being told, in that clause, not to leak its own implementation across the seam to the user. Both are written down because the model otherwise gets them wrong.
+
+None of this is style. It is conformance, written down. The reason every visual Claude reply has the same surface — the same flatness, the same outline icons, the same gentle spacing — is not a house aesthetic. It is that each one was generated against the same checklist, in a single pass, with no review.
+
+This is the deeper version of the inline-style observation. The host cannot lint the reply after the fact; it can only narrate the reply in advance. *Tokens* are the host's nouns; the *spec* is the host's grammar. Together they give the model enough vocabulary and enough constraint to produce something the host can render without surprises. A reply that is an interface needs an interface contract — and the only place to keep that contract, when the guest is a language model writing HTML in one pass, is in the words the model reads just before it writes. The full document, including the four other modules and the SVG-setup specification, is preserved as a [companion archive](/imagine-suite).
+
+## From document to interface
+
+It is tempting to read all of this as a small format war. It is not. It is the shape of the reply itself changing, under cover of the format change.
+
+For five years the model's job was to write a document. The user asked, the model wrote prose, the user read prose. The reply was a static text; Markdown was the natural carrier.
+
+What the model is being asked to do now is different. Generate an explanation a non-technical colleague can follow on first read. Produce a spec a team will actually open. Lay out a comparison the reader can manipulate. Show a configuration the reader can edit before committing it. None of these wants are met by prose. They are met by a small, single-use interface.
+
+The reply has stopped being a document. It is becoming an interface with a time-to-live. Markdown will remain the source format. HTML will be the reading format. The underlying data — JSON, YAML, a database row — will be what the two formats describe. The shift is mostly invisible because none of the three layers is new. What is new is which layer the *reply* lives in.
+
+<References>
+  <Reference href="https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html">Thariq Shihipar, "The unreasonable effectiveness of HTML", Claude Code blog, May 2026.</Reference>
+  <Reference href="https://simonwillison.net/2026/May/8/unreasonable-effectiveness-of-html/">Simon Willison, "The unreasonable effectiveness of HTML", May 2026.</Reference>
+  <Reference href="https://research.google/blog/generative-ui-a-rich-custom-visual-interactive-user-experience-for-any-prompt/">Google Research, "Generative UI: a rich, custom, visual, interactive user experience for any prompt".</Reference>
+  <Reference href="https://blog.google/products-and-platforms/products/gemini/gemini-3-gemini-app/">Google, "Gemini 3 in the Gemini app".</Reference>
+</References>

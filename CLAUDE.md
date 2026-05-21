@@ -84,7 +84,7 @@ Content lives as MDX under `content/`. There is **no CMS** by design — every e
    ---
    ```
 
-3. Body: standard Markdown + MDX. Use `<Lead>...</Lead>` to open the first paragraph if desired (renders as small caps). Use `#`, `##`, `###` for structure, rarely — most pieces do not need headings.
+3. Body: standard Markdown + MDX. Use `<Lead>...</Lead>` to open the first paragraph if desired (renders as small caps). Use `##` for top-level section breaks — long essays (≥ 800 words) usually want them every 300–500 words, both for reading rhythm and for SEO (headings are how search engines and screen readers see structure). Skip headings only for short pieces. `###` is rarely needed; reach for it only when a section has genuine subsections.
 
 4. Reference numbers (`n`) are **blog-wide and never reused.** Check the highest existing `n` across essays and notes before assigning.
 
