@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { cache } from "react";
+import { MotionLink as Link } from "./motion-link";
 
 const FILE = path.join(
   process.cwd(),
@@ -71,9 +72,9 @@ export async function ImagineSpecSource() {
       >
         Excerpt: the <em>Rules</em> block from <code>00-core</code>. The full
         spec is the{" "}
-        <a href="/imagine-suite" className="quiet-link">
+        <Link href="/imagine-suite" className="quiet-link">
           companion archive
-        </a>
+        </Link>
         .
       </figcaption>
     </figure>

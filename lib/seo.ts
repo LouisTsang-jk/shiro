@@ -2,6 +2,14 @@ import type { Metadata } from "next";
 import { site } from "./site";
 import { isoDate } from "./format";
 import type { Essay, Note } from "./content";
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  OG_LOCALE,
+  localizedPath,
+  t,
+  type Locale,
+} from "./i18n";
 
 const SEPARATOR = " — ";
 
@@ -12,7 +20,11 @@ export function buildTitle(parts: string[]): string {
 type CommonMetadataInput = {
   title: string;
   description: string;
+  /** Canonical (English) path, e.g. "/essays/x" or "/". */
   path: string;
+  lang?: Locale;
+  /** Locales for which this path exists; defaults to every locale. */
+  alternateLocales?: Locale[];
   ogImage?: string;
   type?: "article" | "website";
   publishedTime?: string;
@@ -22,8 +34,20 @@ type CommonMetadataInput = {
 
 const DEFAULT_OG_IMAGE = new URL("/opengraph-image", site.url).toString();
 
+function absolute(lang: Locale, path: string): string {
+  return new URL(localizedPath(lang, path), site.url).toString();
+}
+
 export function buildMetadata(input: CommonMetadataInput): Metadata {
-  const url = new URL(input.path, site.url).toString();
+  const lang = input.lang ?? DEFAULT_LOCALE;
+  const locales = input.alternateLocales ?? [...LOCALES];
+  const canonical = absolute(lang, input.path);
+
+  // hreflang map for every available translation, plus x-default -> English.
+  const languages: Record<string, string> = {};
+  for (const loc of locales) languages[loc] = absolute(loc, input.path);
+  languages["x-default"] = absolute(DEFAULT_LOCALE, input.path);
+
   // openGraph is shallow-merged across segments, so a child segment that sets
   // openGraph without images would shadow the root opengraph-image file
   // convention. Always set an image — either the page's own or the site
@@ -35,13 +59,13 @@ export function buildMetadata(input: CommonMetadataInput): Metadata {
   return {
     title: { absolute: input.title },
     description: input.description,
-    alternates: { canonical: url },
+    alternates: { canonical, languages },
     openGraph: {
       title: input.title,
       description: input.description,
-      url,
+      url: canonical,
       siteName: site.name,
-      locale: "en_US",
+      locale: OG_LOCALE[lang],
       type: input.type ?? "website",
       images: [{ url: image, width: 1200, height: 630 }],
       publishedTime: input.publishedTime,
@@ -57,11 +81,16 @@ export function buildMetadata(input: CommonMetadataInput): Metadata {
   };
 }
 
-export function essayMetadata(essay: Essay): Metadata {
+export function essayMetadata(
+  essay: Essay,
+  alternateLocales: Locale[] = [essay.lang],
+): Metadata {
   return buildMetadata({
     title: buildTitle([essay.title]),
     description: essay.excerpt,
     path: `/essays/${essay.slug}`,
+    lang: essay.lang,
+    alternateLocales,
     ogImage: essay.ogImage,
     type: "article",
     publishedTime: isoDate(essay.date),
@@ -76,17 +105,22 @@ function truncate(text: string, max: number): string {
 
 function noteHeadline(body: string, max: number): string {
   const flat = body.replace(/\s+/g, " ").trim();
-  const sentence = flat.match(/^[^.!?]*[.!?]/);
+  const sentence = flat.match(/^[^.!?。！？]*[.!?。！？]/);
   return truncate((sentence?.[0] ?? flat).trim(), max);
 }
 
-export function noteMetadata(note: Note): Metadata {
+export function noteMetadata(
+  note: Note,
+  alternateLocales: Locale[] = [note.lang],
+): Metadata {
   const summary = note.body.replace(/\s+/g, " ").trim();
   const description = truncate(summary, 160);
   return buildMetadata({
     title: buildTitle([noteHeadline(note.body, 70)]),
     description,
     path: `/notes/${note.slug}`,
+    lang: note.lang,
+    alternateLocales,
     type: "article",
     publishedTime: isoDate(note.date),
     authors: [site.author.name],
@@ -94,7 +128,7 @@ export function noteMetadata(note: Note): Metadata {
 }
 
 export function essayJsonLd(essay: Essay) {
-  const url = new URL(`/essays/${essay.slug}`, site.url).toString();
+  const url = absolute(essay.lang, `/essays/${essay.slug}`);
   const wordCount = essay.body.split(/\s+/).filter(Boolean).length;
   return {
     "@context": "https://schema.org",
@@ -103,7 +137,7 @@ export function essayJsonLd(essay: Essay) {
     description: essay.excerpt,
     datePublished: isoDate(essay.date),
     dateModified: isoDate(essay.date),
-    inLanguage: "en",
+    inLanguage: essay.lang,
     wordCount,
     author: {
       "@type": "Person",
@@ -124,14 +158,14 @@ export function essayJsonLd(essay: Essay) {
 }
 
 export function noteJsonLd(note: Note) {
-  const url = new URL(`/notes/${note.slug}`, site.url).toString();
+  const url = absolute(note.lang, `/notes/${note.slug}`);
   return {
     "@context": "https://schema.org",
     "@type": "ShortStory",
     headline: noteHeadline(note.body, 110),
     articleBody: note.body,
     datePublished: isoDate(note.date),
-    inLanguage: "en",
+    inLanguage: note.lang,
     author: { "@type": "Person", name: site.author.name, url: site.url },
     publisher: { "@type": "Person", name: site.author.name, url: site.url },
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
@@ -139,14 +173,14 @@ export function noteJsonLd(note: Note) {
   };
 }
 
-export function websiteJsonLd() {
+export function websiteJsonLd(lang: Locale = DEFAULT_LOCALE) {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: site.name,
-    description: site.description,
-    url: site.url,
-    inLanguage: "en",
+    description: t(lang).meta.site,
+    url: absolute(lang, "/"),
+    inLanguage: lang,
     publisher: {
       "@type": "Person",
       name: site.author.name,

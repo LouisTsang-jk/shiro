@@ -1,25 +1,15 @@
 import type { Metadata } from "next";
-import { Frame } from "@/components/frame";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { ArchiveView } from "@/components/archive-view";
-import { getAllEssays } from "@/lib/content";
+import { ArchivePageView } from "@/components/views";
 import { buildMetadata, buildTitle } from "@/lib/seo";
+import { t } from "@/lib/i18n";
 
 export const metadata: Metadata = buildMetadata({
-  title: buildTitle(["Essays"]),
-  description: "The complete archive of essays by Louis Tsang, grouped by year.",
+  title: buildTitle([t("en").essaysTitle]),
+  description: t("en").meta.essays,
   path: "/archive",
+  lang: "en",
 });
 
-export default async function ArchivePage() {
-  const essays = await getAllEssays();
-
-  return (
-    <Frame>
-      <Header pathname="/archive" />
-      <ArchiveView essays={essays} />
-      <Footer />
-    </Frame>
-  );
+export default function ArchivePage() {
+  return <ArchivePageView lang="en" />;
 }

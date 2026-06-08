@@ -1,25 +1,15 @@
 import type { Metadata } from "next";
-import { Frame } from "@/components/frame";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { NotesIndex } from "@/components/notes-index";
-import { getAllNotes } from "@/lib/content";
+import { NotesView } from "@/components/views";
 import { buildMetadata, buildTitle } from "@/lib/seo";
+import { t } from "@/lib/i18n";
 
 export const metadata: Metadata = buildMetadata({
-  title: buildTitle(["Notes"]),
-  description: "Short notes and observations by Louis Tsang, grouped by month.",
+  title: buildTitle([t("en").notesTitle]),
+  description: t("en").meta.notes,
   path: "/notes",
+  lang: "en",
 });
 
-export default async function NotesIndexPage() {
-  const notes = await getAllNotes();
-
-  return (
-    <Frame>
-      <Header pathname="/notes" />
-      <NotesIndex notes={notes} />
-      <Footer />
-    </Frame>
-  );
+export default function NotesIndexPage() {
+  return <NotesView lang="en" />;
 }

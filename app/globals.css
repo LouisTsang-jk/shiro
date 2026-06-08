@@ -14,9 +14,9 @@
   --color-ink-3: #8a8475;
   --color-ink-4: #b8b1a1;
 
-  --font-display: "Cormorant Garamond", "EB Garamond", ui-serif, serif;
-  --font-body: "EB Garamond", "Cormorant Garamond", ui-serif, serif;
-  --font-label: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Cormorant Garamond", "EB Garamond", "Noto Serif SC", "Noto Serif TC", ui-serif, serif;
+  --font-body: "EB Garamond", "Cormorant Garamond", "Noto Serif SC", "Noto Serif TC", ui-serif, serif;
+  --font-label: "Inter", "Noto Sans SC", "Noto Sans TC", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
 }
 
@@ -32,9 +32,9 @@
   --measure: 680px;
   --bl: 8px;
 
-  --font-display: var(--ff-display), "Cormorant Garamond", ui-serif, serif;
-  --font-body: var(--ff-body), "EB Garamond", ui-serif, serif;
-  --font-label: var(--ff-label), "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: var(--ff-display), "Cormorant Garamond", "Noto Serif SC", "Noto Serif TC", ui-serif, serif;
+  --font-body: var(--ff-body), "EB Garamond", "Noto Serif SC", "Noto Serif TC", ui-serif, serif;
+  --font-label: var(--ff-label), "Inter", "Noto Sans SC", "Noto Sans TC", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--ff-mono), "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
 }
 
@@ -56,7 +56,7 @@ html {
 
 body {
   color: var(--ink);
-  font-family: "EB Garamond", "Cormorant Garamond", ui-serif, serif;
+  font-family: "EB Garamond", "Cormorant Garamond", "Noto Serif SC", "Noto Serif TC", ui-serif, serif;
   font-weight: 400;
   font-size: 16px;
   line-height: 1.75;

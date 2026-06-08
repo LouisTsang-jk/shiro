@@ -1,0 +1,188 @@
+---
+n: "003"
+title: "在 Claude 裡建一個部落格"
+date: "2026.05.21"
+excerpt: "一個從設計、搭建到寫作全程由 Claude 完成的部落格。真正改變的不是工具，而是寫作如何開始。"
+tags: ["agents", "writing"]
+---
+
+<Lead>你正在讀的這個部落格，由 Claude 設計，由 Claude 編寫程式，由 Claude 寫就。</Lead> 你眼前的每一行——版式、節奏、文字——在經過人手之前，都先經過了一個模型。
+
+我寫這篇不是為了表演。我寫它，是因為把我帶到這裡的那條路很短，而它指向一個值得命名的變化。
+
+## 流水線
+
+我打開 Claude Design，告訴它我想要一個原研哉氣質的部落格——骨白色的紙，寬裕的留白，克制的版式，顏色收到只剩黑與骨白。它給出了一套版面配置。我點了 *Export*，設計便作為一份結構化的規格交給了 Claude Code。Claude Code 起了一個用 Tailwind 的 Next.js 專案，裝上 MDX，寫好路由，定下字體堆疊。幾個小時後，一個能跑的網站就在那裡了。
+
+<figure style={{ margin: "32px 0", padding: 0 }}>
+<svg width="100%" viewBox="0 0 680 240" role="img" aria-labelledby="svg1-title svg1-desc">
+  <title id="svg1-title">The handoff pipeline</title>
+  <desc id="svg1-desc">Claude Design exports a spec to Claude Code, which scaffolds the Next.js site. DESIGN.md sits beneath as a shared constraint that Claude Code reads on every change.</desc>
+  <defs>
+    <marker id="arr-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+    </marker>
+  </defs>
+  <rect x="80" y="60" width="140" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="150" y="80" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">CLAUDE DESIGN</text>
+  <text x="150" y="98" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink-3)">design + spec</text>
+  <rect x="270" y="60" width="140" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="340" y="80" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">CLAUDE CODE</text>
+  <text x="340" y="98" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink-3)">scaffold + build</text>
+  <rect x="460" y="60" width="140" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="530" y="80" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">STATIC SITE</text>
+  <text x="530" y="98" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink-3)">Next.js, MDX</text>
+  <line x1="220" y1="84" x2="270" y2="84" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-1)" />
+  <line x1="410" y1="84" x2="460" y2="84" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-1)" />
+  <text x="245" y="74" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">export</text>
+  <text x="435" y="74" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">build</text>
+  <rect x="270" y="160" width="140" height="48" fill="none" stroke="var(--ink-3)" strokeWidth="0.5" strokeDasharray="3 3" />
+  <text x="340" y="182" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="11" fill="var(--ink)">DESIGN.md</text>
+  <text x="340" y="198" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">shared constraint</text>
+  <line x1="340" y1="160" x2="340" y2="108" stroke="var(--ink-3)" strokeWidth="0.5" strokeDasharray="3 3" markerEnd="url(#arr-1)" />
+  <text x="352" y="138" textAnchor="start" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">reads</text>
+</svg>
+</figure>
+
+不顯眼的部分，是這次交接。一個模型的輸出成了另一個模型的輸入——而這個輸入不是像素，也不是一個 Figma 檔案。它是一段描述。字級比例。間距比例。元件的意圖。接收的模型讀這段描述，就像一個細緻的工程師讀一份需求簡報——然後照著實作，不帶自我。
+
+把這一切維繫住的，是一個檔案：`DESIGN.md`。設計系統，寫成樸素的英文。閱讀寬度是 680 像素。縱向節奏都對齊到 8 的倍數。四種字體，沒有第五種。任何地方都沒有強調色——如果你伸手去拿一種，那設計就錯了。
+
+Figma 裡的設計系統是給人用的庫。`DESIGN.md` 是給 agent 用的庫。Claude Code 此後做的每一處改動——加一個頁面、給一個元件重新調樣式、搭一個新視圖——都先讀這個檔案。它不是文件。它是約束，以一種模型能照著套用的形式存在。
+
+## 寫作作為一種 skill
+
+這裡沒有 CMS。這個部落格上的每一篇 essay 和 note 都是一個簽入儲存庫的 MDX 檔案。網站由 Next.js 靜態生成。寫一篇新文章，意味著新建一個檔案，也就意味著請一個 agent 幫我寫這個檔案。
+
+這場協作走的是 Claude Code 稱之為 Skill 的東西。一個 skill 是一份小小的 markdown 文件，描述我希望模型在某個具體任務上如何行事。不是要產出什麼，而是*如何協作*。我的這個，`new-essay`，分五個階段運行：
+
+<figure style={{ margin: "32px 0", padding: 0 }}>
+<svg width="100%" viewBox="0 0 680 170" role="img" aria-labelledby="svg2-title svg2-desc">
+  <title id="svg2-title">The skill protocol</title>
+  <desc id="svg2-desc">Five stages: understand, outline, draft, revise, ship. Each gates entry to the next.</desc>
+  <defs>
+    <marker id="arr-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+    </marker>
+  </defs>
+  <rect x="46" y="50" width="105" height="52" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="98.5" y="70" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="10" fill="var(--ink-3)">01</text>
+  <text x="98.5" y="90" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">UNDERSTAND</text>
+  <text x="98.5" y="124" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">restate + ask</text>
+  <rect x="167" y="50" width="105" height="52" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="219.5" y="70" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="10" fill="var(--ink-3)">02</text>
+  <text x="219.5" y="90" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">OUTLINE</text>
+  <text x="219.5" y="124" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">propose, wait</text>
+  <rect x="288" y="50" width="105" height="52" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="340.5" y="70" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="10" fill="var(--ink-3)">03</text>
+  <text x="340.5" y="90" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">DRAFT</text>
+  <text x="340.5" y="124" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">one pass</text>
+  <rect x="409" y="50" width="105" height="52" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="461.5" y="70" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="10" fill="var(--ink-3)">04</text>
+  <text x="461.5" y="90" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">REVISE</text>
+  <text x="461.5" y="124" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">cut weakest</text>
+  <rect x="530" y="50" width="105" height="52" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="582.5" y="70" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="10" fill="var(--ink-3)">05</text>
+  <text x="582.5" y="90" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink)">SHIP</text>
+  <text x="582.5" y="124" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">file + check</text>
+  <line x1="151" y1="76" x2="167" y2="76" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-2)" />
+  <line x1="272" y1="76" x2="288" y2="76" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-2)" />
+  <line x1="393" y1="76" x2="409" y2="76" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-2)" />
+  <line x1="514" y1="76" x2="530" y2="76" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-2)" />
+</svg>
+</figure>
+
+對應的檔案大致長這樣：
+
+```yaml
+---
+name: new-essay
+description: Help me write an English essay on my shiro blog.
+---
+
+## Stage 1 — Understand
+Do not start writing. First, restate what you heard in one sentence.
+Then ask 1–3 specific gaps. No checklist questions.
+
+## Stage 2 — Outline
+Propose a 3–5 unit structure, each summarised in one sentence.
+Wait for confirmation. Do not write prose yet.
+
+## Stage 3 — Draft
+Write the full English draft in one pass. Thoughtful, restrained,
+concept-driven. Short sentences. Concrete after abstract.
+No "delve", "unpack", "in conclusion".
+
+## Stage 4 — Revise
+Take feedback. Cut the weakest paragraph rather than compress
+the whole thing.
+
+## Stage 5 — Ship
+Write to content/essays/<slug>.mdx, run pnpm check, report.
+```
+
+這個部落格上的每一篇 essay——包括你正在讀的這篇——都跟 Claude 走過了這五個階段。模型知道該問什麼，何時等待，何時動筆。
+
+催生這個 skill 的那條元提示詞，本質上是這樣：
+
+> 我想要一個在我部落格上寫 essay 的 skill。語氣：有思考、克制——Paul Graham × Maggie Appleton。在我確認一句話的內核和一份段落級的大綱之前，這個 skill 不許你起草。硬性約束：短句；不要 "delve" / "unpack" / "let's explore"；第一人稱要省；結論暗示而非直說。檔案以帶 frontmatter 的 MDX 放進 `content/essays`。最後跑 `pnpm check`。讓這個 skill 教你如何協作，而不是產出什麼。
+
+那一段變成了兩百行的 skill markdown，版本化保存在 `.claude/skills/new-essay/SKILL.md`。一旦它存在，就再也不必重寫。
+
+## 真正改變了什麼
+
+這就是整套技術堆疊。在 Claude Design 裡設計，在 Claude Code 裡編寫程式，在 Skills 裡產出內容，全都坐落在 Next.js 靜態生成和一個扁平的 MDX 資料夾之上。沒有 CMS。沒有資料庫。沒有後台面板。這個部落格就是一個程式庫。每一處改動——視覺的、結構的、編輯的——都是一次 commit。
+
+但改變的不是技術堆疊。技術堆疊是下游。
+
+改變的，是寫作如何開始。
+
+很多年裡我有一個裝著半成形念頭的資料夾。Apple Notes 裡的筆記，Things 裡的片段，從沒轉寫過的語音備忘。當我坐下來寫一篇部落格時，那活兒其實不是*寫作*——是重建。把碎片從腦子裡掏出來，排列它們，找到那條貫穿的線，然後再產出文字。這層阻力太高，以至於資料夾裡的大半，就一直留在資料夾裡。
+
+當你跟一個 agent 一起寫時，它做的事，是接管了重建那一步。你用碎片說話。*我想說點關於 X 的，還有 Y 也相關，還有上週發生過一件事。*模型還不動筆寫 essay。它複述：*我聽到你在說 X——對嗎？*它發問：*你想從一個場景開篇，還是從一個論斷開篇？有沒有反例？*那些碎片從你腦子裡出來，不是作為文字，而是作為回答。
+
+<figure style={{ margin: "32px 0", padding: 0 }}>
+<svg width="100%" viewBox="0 0 680 250" role="img" aria-labelledby="svg3-title svg3-desc">
+  <title id="svg3-title">The writing shift</title>
+  <desc id="svg3-desc">Before: fragments to prose required manual reconstruction in your head. After: an agent breaks reconstruction into conversation and outline.</desc>
+  <defs>
+    <marker id="arr-3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+    </marker>
+  </defs>
+  <text x="40" y="52" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink-3)">BEFORE</text>
+  <rect x="80" y="64" width="120" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="140" y="92" textAnchor="middle" fontFamily="var(--font-body)" fontSize="13" fontStyle="italic" fill="var(--ink)">Fragments</text>
+  <rect x="220" y="64" width="240" height="48" fill="var(--bone)" stroke="none" />
+  <text x="340" y="86" textAnchor="middle" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink-2)">MANUAL RECONSTRUCTION</text>
+  <text x="340" y="102" textAnchor="middle" fontFamily="var(--font-body)" fontSize="11" fontStyle="italic" fill="var(--ink-3)">— done alone, in your head</text>
+  <rect x="480" y="64" width="120" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="540" y="92" textAnchor="middle" fontFamily="var(--font-body)" fontSize="13" fontStyle="italic" fill="var(--ink)">Prose</text>
+  <line x1="200" y1="88" x2="220" y2="88" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-3)" />
+  <line x1="460" y1="88" x2="480" y2="88" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-3)" />
+  <text x="40" y="172" fontFamily="var(--font-label)" fontSize="9.5" fontWeight="300" letterSpacing="0.18em" fill="var(--ink-3)">AFTER</text>
+  <rect x="80" y="184" width="90" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="125" y="212" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink)">Fragments</text>
+  <line x1="170" y1="208" x2="230" y2="208" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-3)" />
+  <rect x="230" y="184" width="120" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="290" y="212" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink)">Conversation</text>
+  <line x1="350" y1="208" x2="380" y2="208" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-3)" />
+  <rect x="380" y="184" width="90" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="425" y="212" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink)">Outline</text>
+  <line x1="470" y1="208" x2="510" y2="208" stroke="var(--ink)" strokeWidth="0.5" markerEnd="url(#arr-3)" />
+  <rect x="510" y="184" width="90" height="48" fill="none" stroke="var(--ink)" strokeWidth="0.5" />
+  <text x="555" y="212" textAnchor="middle" fontFamily="var(--font-body)" fontSize="12" fontStyle="italic" fill="var(--ink)">Prose</text>
+</svg>
+</figure>
+
+等到大綱談定，這篇 essay 已經想了一半。寫，是容易的那部分。
+
+這不是一個關於效率的說法。它更接近反面。agent 讓*思考*變容易，而不是打字。寫一篇部落格以前需要先有一個成形的想法。現在它是一種去*找到*那個成形想法的方式。
+
+還有一個更安靜的後果。當把某件事寫下來的成本降下來，值得寫下來的門檻也跟著降了。這個部落格上的 note 很短——三到五句，沒有標題，文字本身就是標題。它們之所以存在，是因為如今把一個觀察存成一條 note 的阻力，差不多就等於產生那個觀察的阻力。兩者合一了。
+
+一個裝著半成形念頭的資料夾，變成了一份已發布的存檔。不是因為我變得更勤勉。是因為從碎片到發布的那條路被縮短到了一個程度——勤勉不再是瓶頸。
+
+我還不知道該怎麼稱呼這種部落格。不是日記——太有結構。不是出版物——太安靜。某種近乎痕跡的東西。一個人思考時留下的輸出，藉助一個足夠耐心、不斷追問下一步的工具。
+
+部落格不再是你存放想完之事的地方。它是思考發生的地方，以及思考所留下的。

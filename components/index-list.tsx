@@ -1,29 +1,36 @@
 import { MotionLink as Link } from "./motion-link";
 import type { Essay } from "@/lib/content";
 import { formatDateDotted, isoDate } from "@/lib/format";
+import { localizedPath, type Locale } from "@/lib/i18n";
 
 type IndexListProps = {
   essays: Essay[];
+  lang: Locale;
 };
 
-export function IndexList({ essays }: IndexListProps) {
+export function IndexList({ essays, lang }: IndexListProps) {
   if (essays.length === 0) return null;
   return (
     <section>
       <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
         {essays.map((essay, i) => (
-          <IndexRow key={essay.slug} essay={essay} last={i === essays.length - 1} />
+          <IndexRow
+            key={essay.slug}
+            essay={essay}
+            lang={lang}
+            last={i === essays.length - 1}
+          />
         ))}
       </ol>
     </section>
   );
 }
 
-function IndexRow({ essay, last }: { essay: Essay; last: boolean }) {
+function IndexRow({ essay, lang, last }: { essay: Essay; lang: Locale; last: boolean }) {
   return (
     <li className="row index-row" style={{ borderBottom: last ? "0.5px solid var(--bone)" : "none" }}>
       <Link
-        href={`/essays/${essay.slug}`}
+        href={localizedPath(lang, `/essays/${essay.slug}`)}
         style={{
           display: "grid",
           gridTemplateColumns: "72px 2fr 1.4fr 120px 64px",

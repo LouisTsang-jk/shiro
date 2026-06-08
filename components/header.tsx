@@ -1,19 +1,27 @@
 import { MotionLink as Link } from "./motion-link";
 import { site, navItems } from "@/lib/site";
 import { NavLabel } from "./nav-label";
+import { LanguageSwitcher } from "./language-switcher";
+import { LOCALES, localizedPath, t, type Locale } from "@/lib/i18n";
 
 type HeaderProps = {
-  pathname: string;
+  /** Canonical (English) path of the current page — used for active state. */
+  path: string;
+  lang: Locale;
+  /** Locales in which this page exists; defaults to all. */
+  locales?: Locale[];
 };
 
-function isActive(pathname: string, match: readonly string[]): boolean {
+function isActive(path: string, match: readonly string[]): boolean {
   return match.some((m) => {
-    if (m === "/") return pathname === "/";
-    return pathname === m || pathname.startsWith(`${m}/`);
+    if (m === "/") return path === "/";
+    return path === m || path.startsWith(`${m}/`);
   });
 }
 
-export function Header({ pathname }: HeaderProps) {
+export function Header({ path, lang, locales = [...LOCALES] }: HeaderProps) {
+  const dict = t(lang);
+
   return (
     <header
       className="header-grid"
@@ -26,10 +34,12 @@ export function Header({ pathname }: HeaderProps) {
         marginBottom: 80,
       }}
     >
-      <div />
+      <div style={{ justifySelf: "start" }}>
+        <LanguageSwitcher path={path} lang={lang} locales={locales} />
+      </div>
 
       <Link
-        href="/"
+        href={localizedPath(lang, "/")}
         className="header-grid__masthead"
         style={{ textAlign: "center", display: "block" }}
       >
@@ -51,10 +61,10 @@ export function Header({ pathname }: HeaderProps) {
       <nav style={{ justifySelf: "end", display: "flex", gap: 28 }}>
         {navItems.map((item) => (
           <NavLabel
-            key={item.href}
-            label={item.label}
-            href={item.href}
-            active={isActive(pathname, item.match)}
+            key={item.key}
+            label={dict.nav[item.key]}
+            href={localizedPath(lang, item.href)}
+            active={isActive(path, item.match)}
           />
         ))}
       </nav>

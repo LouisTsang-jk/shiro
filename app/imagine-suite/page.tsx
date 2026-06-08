@@ -31,7 +31,7 @@ export default async function ImagineSuitePage() {
 
   return (
     <Frame>
-      <Header pathname="/imagine-suite" />
+      <Header path="/imagine-suite" lang="en" locales={["en"]} />
 
       <article style={{ maxWidth: 680, margin: "0 auto", paddingTop: 24 }}>
         <div style={{ textAlign: "center", paddingBottom: 64 }}>

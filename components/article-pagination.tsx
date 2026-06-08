@@ -3,13 +3,15 @@ import { MotionLink as Link } from "./motion-link";
 type Direction = "essay" | "note";
 
 type Neighbor = {
-  slug: string;
+  href: string;
   label: string;
 };
 
 type ArticlePaginationProps = {
   prev: Neighbor | null;
   next: Neighbor | null;
+  prevKicker: string;
+  nextKicker: string;
   homeLabel: string;
   homeHref: string;
   direction: Direction;
@@ -18,6 +20,8 @@ type ArticlePaginationProps = {
 export function ArticlePagination({
   prev,
   next,
+  prevKicker,
+  nextKicker,
   homeLabel,
   homeHref,
   direction,
@@ -55,16 +59,12 @@ export function ArticlePagination({
     >
       <div style={{ textAlign: "left", opacity: prev ? 1 : 0.3 }}>
         {prev ? (
-          <Link href={prev.slug} style={{ display: "block", color: "inherit" }}>
-            <div className="t-label">
-              ← {direction === "essay" ? "Previous" : "Earlier note"}
-            </div>
+          <Link href={prev.href} style={{ display: "block", color: "inherit" }}>
+            <div className="t-label">← {prevKicker}</div>
             <div style={{ marginTop: 12, ...labelStyle }}>{prev.label}</div>
           </Link>
         ) : (
-          <div className="t-label">
-            ← {direction === "essay" ? "Previous" : "Earlier note"}
-          </div>
+          <div className="t-label">← {prevKicker}</div>
         )}
       </div>
 
@@ -76,16 +76,12 @@ export function ArticlePagination({
 
       <div style={{ textAlign: "right", opacity: next ? 1 : 0.3 }}>
         {next ? (
-          <Link href={next.slug} style={{ display: "block", color: "inherit" }}>
-            <div className="t-label">
-              {direction === "essay" ? "Next" : "Later note"} →
-            </div>
+          <Link href={next.href} style={{ display: "block", color: "inherit" }}>
+            <div className="t-label">{nextKicker} →</div>
             <div style={{ marginTop: 12, ...labelStyle }}>{next.label}</div>
           </Link>
         ) : (
-          <div className="t-label">
-            {direction === "essay" ? "Next" : "Later note"} →
-          </div>
+          <div className="t-label">{nextKicker} →</div>
         )}
       </div>
     </nav>

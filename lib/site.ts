@@ -13,6 +13,6 @@ export const site = {
 } as const;
 
 export const navItems = [
-  { label: "Essays", href: "/", match: ["/", "/archive", "/essays"] },
-  { label: "Notes", href: "/notes", match: ["/notes"] },
+  { key: "essays", href: "/", match: ["/", "/archive", "/essays"] },
+  { key: "notes", href: "/notes", match: ["/notes"] },
 ] as const;

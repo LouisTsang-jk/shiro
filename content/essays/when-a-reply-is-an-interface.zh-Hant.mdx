@@ -1,0 +1,188 @@
+---
+n: "002"
+title: "當回覆成為介面"
+date: "2026.05.21"
+excerpt: "用 HTML 取代 Markdown、一個內聯渲染的示範，以及為什麼 agent 的回覆把樣式內聯隨發，而不走 Tailwind。"
+tags: ["llm", "design"]
+---
+
+<Lead>回覆開始以頁面的形態抵達。</Lead> 在提示詞末尾多加一行——*structure your response as HTML*——回覆回來時就成了一張小小的頁面，而不是一份文件。Karpathy 五月在 X 上順帶提到這件事，此前 [Claude Code 團隊的 Thariq Shihipar 已經把它寫成文章](https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html)。Claude 部落格給這個做法起了個名字：*The unreasonable effectiveness of HTML*。同一週，Simon Willison [重新考慮了他預設用 Markdown 的習慣](https://simonwillison.net/2026/May/8/unreasonable-effectiveness-of-html/)。Google 則把同樣的轉向[打包進 Gemini app](https://research.google/blog/generative-ui-a-rich-custom-visual-interactive-user-experience-for-any-prompt/)，稱之為 *Generative UI*。被注意到的不是一種新格式，而是 agent 的回覆本來就想成為什麼。
+
+有一陣子，Markdown 是合理的預設值，理由站得住腳。在 GPT-4 時代，上下文視窗是 8,192 tokens；相比 HTML，Markdown 在 token 上的節省值真金白銀。這個約束已經解除。預設值之所以滯後，是因為預設值總是滯後。
+
+## 四個屬性
+
+一旦 token 這個理由消失，兩種格式就在四個屬性上分道揚鑣。
+
+第一是*密度*。Markdown 給寫作者標題、清單、表格、程式碼區塊。HTML 在此之上還給了 CSS、SVG、圖片、canvas、版面，以及任意互動。Markdown 裡的圖是一棵 ASCII 樹。HTML 裡的圖是一張 SVG，箭頭和註解都對得齊。
+
+第二是*長度之下的可讀性*。超過大約一百行，Markdown 就成了一堵牆。Shihipar 的自嘲是，他自己讀到那裡也讀不下去了——而他正是這份回覆的*作者*。一份 200 行的 spec 渲染成頁面——目錄釘在一側，狀態用藥丸標籤標出，附錄摺疊收起——是同事願意打開的東西。資訊一樣，閱讀速度不一樣。
+
+第三是*可分享性*。一個 Markdown 檔案需要一個渲染器。一個 `.html` 檔案*本身就是*渲染器。上傳它，發出連結，讀者直接打開頁面。
+
+第四是*互動性*。一份靜態報告無法被反駁。一份互動式報告——拖動優先級滑桿，看著表格重新排序，點*copy as JSON*——把迴路接回了產生它的那場對話。Claude Code 那篇文章羅列了這些用完即棄的介面：用來分診工單的看板，一個會就相依關係發出警告的功能開關編輯器，一個並排比對、帶即時 token 計數的提示詞比較器。每一個都只為回答一個問題而生成一次，然後丟掉。
+
+正在移動的不是回覆的*格式*，是它的*類別*。Markdown 是一份文件。HTML，在這種用法裡，是一個介面——臨時、一次性、在通往某個決定的路上順手生成。
+
+## 分工
+
+往下走之前先澄清一點。這不是「Markdown 完了」。對*原始檔*來說，Markdown 仍是合理的預設值——對 `README.md`，對 `CLAUDE.md`，對任何逐版本編輯、在 git 裡合併的東西。塵埃落定後那道乾淨的分界大致是這樣：Markdown 用於被維護的，HTML 用於被閱讀的，JSON 或 YAML 用於在系統之間被傳遞的。
+
+<svg width="100%" viewBox="0 0 680 220" role="img" aria-labelledby="layers-title layers-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="layers-title">A division of labour across three text formats</title>
+  <desc id="layers-desc">Markdown holds what is maintained — readmes, project guides, content sources. HTML holds what is read — reports, specs, throwaway interfaces. JSON or YAML holds what is passed between systems — API payloads, configuration, structured data. Each format is named for the verb its tooling does best: diffs cleanly, renders cleanly, parses cleanly.</desc>
+
+  <text x="340" y="20" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">WHAT EACH FORMAT IS GOOD FOR</text>
+
+  <text x="140" y="58" textAnchor="middle" fontFamily="Cormorant Garamond, EB Garamond, serif" fontStyle="italic" fontWeight="400" fontSize="22" fill="#1a1814">Markdown</text>
+  <text x="340" y="58" textAnchor="middle" fontFamily="Cormorant Garamond, EB Garamond, serif" fontStyle="italic" fontWeight="400" fontSize="22" fill="#1a1814">HTML</text>
+  <text x="540" y="58" textAnchor="middle" fontFamily="Cormorant Garamond, EB Garamond, serif" fontStyle="italic" fontWeight="400" fontSize="22" fill="#1a1814">JSON / YAML</text>
+
+  <line x1="40" y1="76" x2="640" y2="76" stroke="#b8b1a1" strokeWidth="0.5" />
+
+  <text x="140" y="98" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">MAINTAINED</text>
+  <text x="340" y="98" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">READ</text>
+  <text x="540" y="98" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">PASSED</text>
+
+  <text x="140" y="128" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">README.md, CLAUDE.md,</text>
+  <text x="140" y="146" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">content sources</text>
+
+  <text x="340" y="128" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">reports, specs,</text>
+  <text x="340" y="146" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">throwaway interfaces</text>
+
+  <text x="540" y="128" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">API payloads,</text>
+  <text x="540" y="146" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">config, structured data</text>
+
+  <line x1="40" y1="172" x2="640" y2="172" stroke="#b8b1a1" strokeWidth="0.5" />
+
+  <text x="140" y="194" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">diffs cleanly</text>
+  <text x="340" y="194" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">renders cleanly</text>
+  <text x="540" y="194" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">parses cleanly</text>
+</svg>
+
+每一層的強項一旦被點出就顯而易見。Markdown diff 得乾淨。HTML 渲染得乾淨。JSON 解析得乾淨。錯誤在於要求其中任何一個去做其他兩個的活。
+
+## 內聯沙箱之內
+
+這場轉向最新的一褶發生在聊天本身之內。不是 Markdown，不是 Artifact，而是夾在中間的第三種東西：回覆作為 HTML 直接內聯渲染在對話裡，跑在一個模型為當下寫就、對話立即執行的沙箱中。
+
+這個沙箱很小，它的邊界值得弄清。
+
+- HTML 是被沙箱隔離的，也是短暫的。每一次重新渲染都要經過一次工具呼叫；狀態不會跨訊息存活。
+- 網路請求與外部腳本被限制在一份 CDN 白名單內——cdnjs、esm.sh、jsdelivr、unpkg。沙箱搆不到你自己的 API，也搆不到你的 MCP 伺服器。
+- 沒有 `localStorage`。沒有路由。狀態就是 JavaScript 在記憶體裡持有的那些東西。
+- 一座橋，`sendPrompt(text)`，把一條訊息發回對話。正是它讓渲染出的小元件裡那個按鈕可以寫著*Save changes*，並讓結果作為下一輪返回。
+
+這東西*適合做什麼*——一個計算機、一張流程圖、一段帶可調參數的解釋、一個輕量儀表板、一個表單原型——五分鐘內就清楚了。它*不適合做什麼*——任何需要後端、登入、持久化、跨工作階段記憶的東西——也同樣清楚：那是 Artifacts（帶 `window.storage`）或一次真正的 Claude API 整合存在的意義。
+
+下面就是一條這樣的回覆：一個表單，隨讀者互動更新一個即時的 JSON 狀態物件。底部那兩個按鈕通常會回呼進對話；在這裡的 iframe 中，它們會落到瀏覽器主控台。
+
+<ClaudeReplyDemo />
+
+原始碼——模型實際吐出的那段 HTML——在下面。
+
+<ClaudeReplySource />
+
+## 為什麼樣式是內聯的
+
+那段原始碼裡有一個細節值得停下來看。每一處樣式都是**內聯**的。沒有 `class=`，沒有 Tailwind 工具類，沒有外部樣式表。`style="display: flex; flex-direction: column; gap: 1.5rem;"` 諸如此類，一路到底。這不是偷懶。它是契合這個媒介的*唯一*形態。
+
+四個理由。
+
+第一，沒有建置步驟。Tailwind 是一個編譯器——`text-blue-500`、`gap-4` 這樣的工具類之所以存在，是因為有一遍建置掃描原始碼、產生對應的 CSS、注入一份樣式表。聊天沙箱裡這些都沒有。模型吐出原始 HTML；對話把它貼上頁面。一個 `class="text-blue-500"` 什麼也不會做，因為沒有誰把它翻譯過。
+
+第二，串流渲染排除了外部樣式表。回覆不是整個抵達的。它是一個 token 接一個 token 串流進來，聊天客戶端在每個 token 落地時就把它渲染出來。一份外部樣式表——或任何依賴它的工具類系統——會在標記抵達和對應 CSS 抵達之間開出一個視窗。在那個視窗裡，元素可見但沒有樣式。內聯樣式關上了那個視窗：樣式隨元素一起抵達，頁面就地拼裝，永不閃動。Anthropic 自己給聊天沙箱的指引在這一點上寫得很明白——*prefer inline `style="..."` over `<style>` blocks; inputs and controls must look correct mid-stream.*
+
+<svg width="100%" viewBox="0 0 680 260" role="img" aria-labelledby="stream-title stream-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="stream-title">Streaming render: external stylesheet versus inline styles</title>
+  <desc id="stream-desc">Five tokens arrive over time. With an external stylesheet the first four render as outlines — visible but unstyled — and only the fifth renders styled, once the stylesheet has loaded. The moment of catch-up is the flicker. With inline styles every token arrives already styled and the page assembles in place.</desc>
+
+  <text x="340" y="20" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">STREAMING RENDER</text>
+
+  <text x="60" y="80" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">External stylesheet</text>
+
+  <rect x="240" y="60" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <rect x="320" y="60" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <rect x="400" y="60" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <rect x="480" y="60" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+
+  <rect x="560" y="60" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <line x1="568" y1="74" x2="612" y2="74" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="568" y1="84" x2="600" y2="84" stroke="#1a1814" strokeWidth="0.5" />
+
+  <line x1="550" y1="50" x2="550" y2="106" stroke="#8a8475" strokeWidth="0.5" strokeDasharray="2 3" />
+  <text x="550" y="44" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="12" fill="#4a463d">stylesheet arrives</text>
+  <text x="550" y="122" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="11" fill="#8a8475">flicker</text>
+
+  <text x="60" y="190" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">Inline styles</text>
+
+  <rect x="240" y="170" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <line x1="248" y1="184" x2="292" y2="184" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="248" y1="194" x2="280" y2="194" stroke="#1a1814" strokeWidth="0.5" />
+
+  <rect x="320" y="170" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <line x1="328" y1="184" x2="372" y2="184" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="328" y1="194" x2="360" y2="194" stroke="#1a1814" strokeWidth="0.5" />
+
+  <rect x="400" y="170" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <line x1="408" y1="184" x2="452" y2="184" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="408" y1="194" x2="440" y2="194" stroke="#1a1814" strokeWidth="0.5" />
+
+  <rect x="480" y="170" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <line x1="488" y1="184" x2="532" y2="184" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="488" y1="194" x2="520" y2="194" stroke="#1a1814" strokeWidth="0.5" />
+
+  <rect x="560" y="170" width="60" height="36" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <line x1="568" y1="184" x2="612" y2="184" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="568" y1="194" x2="600" y2="194" stroke="#1a1814" strokeWidth="0.5" />
+
+  <line x1="206" y1="228" x2="624" y2="228" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="206" y1="228" x2="206" y2="222" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="624" y1="228" x2="624" y2="222" stroke="#b8b1a1" strokeWidth="0.5" />
+  <text x="415" y="246" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">RENDER TIME</text>
+</svg>
+
+第三，宿主提供的是設計*tokens*，不是工具類。再看一眼那段回覆的 CSS 變數：`var(--color-text-secondary)`、`var(--color-text-info)`、`var(--color-background-secondary)`、`var(--border-radius-md)`、`var(--font-mono)`。這些由 Claude 的聊天外殼注入，有淺色和深色兩套。模型對著提供給它的變數寫；這些變數是宿主的詞彙。Tailwind 會是一套宿主不會說的平行詞彙。
+
+第四，內聯樣式是可攜帶的。這份輸出是一段長對話裡的一個單元；它可能被複製、貼進文件、丟進同事的聊天、稍後作為檔案打開。這些動作中的每一個都會剝掉一份獨立的樣式表。內聯樣式則隨之同行。
+
+這四條背後，是這個媒介一條更安靜的屬性。模型在*一遍*之內產出全部這些。它無法在一份樣式表上反覆迭代——看頁面渲染成什麼樣、改選擇器、再跑一遍。在單遍生成裡，每一個樣式決定都必須緊挨著依賴它的標記而活。內聯正是一份單遍文件所採取的形態。
+
+合起來看，這個做法洩露了回覆*是什麼*。一份用 Tailwind 寫的回覆會預設一個會編譯 Tailwind 的宿主。一份用 CSS 變數寫的回覆只預設一個願意分享自己 tokens 的宿主——於是這份回覆可以在共享那種形態的宿主之間攜帶：Claude 的聊天、一個 Artifact、一個匯出的檔案。內聯樣式的 HTML，是當客人與宿主之間唯一的約定是*我會把我的變數交給你*時，客人所採取的形態。
+
+## 沒有編譯器的一致性
+
+Tokens 解釋*用什麼顏色、用什麼圓角*。它們不解釋*一個小元件是什麼*。它們說不出一個指標是一個大數字壓在一行安靜的標籤之上，說不出一張三十行的表需要一個吸頂表頭，說不出一張只有一個系列的長條圖不能只靠顏色區分，說不出*flat* 就是 flat——沒有漸層、沒有陰影、沒有雜訊。這些每一條都是宿主持有某種意見的決定。其中沒有一條是一個 CSS 變數能裝下的值。
+
+對這道缺口，慣常的答案是一個元件庫：`<Card>`、`<MetricBlock>`、`<DataTable>`，寫一次，處處匯入。聊天沙箱用不了這個答案。沒有 import；沒有建置；模型在一遍之內產出一個 HTML 字串，頁面把它渲染出來。宿主無法發元件——它沒有編譯器去安裝它們。宿主*能*發的，是模型的*上下文*。於是 spec 搬進了提示詞。
+
+坐在提示詞裡的，是一份幾千字長的 Markdown 文件，在模型一伸手去做視覺回覆的那一刻，由一個內部工具——`read_me`——拉進來。在 Anthropic 內部，它被叫作 *Imagine — Visual Creation Suite*。它以五個模型按需點選的模組開篇——*diagram*、*mockup*、*interactive*、*chart*、*art*——接著進入每個模組共享的一套核心設計系統、一份 UI 元件目錄、一份橋規範，以及淺色與深色兩套完整的 CSS 變數表。壓在所有這些之上的，是一條用三個詞陳述的哲學：*seamless, flat, compact*。
+
+規則本身隨後登場。它們才是有意思的部分——具體到令人惱火的程度，寫得像負空間：
+
+<ImagineSpecSource />
+
+讀過頭幾條之後，觸目的不是它的嚴格，是它的*內容*。這些規則大多不是審美偏好。它們是一份故障模式的目錄：串流過程中的閃動，因為某處用了 `position: fixed` 而坍塌的 iframe，一個根本不存在的圖示類——因為模型伸手去搆一個並未預載的 Tabler `-filled` 後綴，一塊 `display: none` 的區域——它的內容隱形地流了進來、再也沒回來。每一行都點名一種模型先前產出過的、把小元件做壞的具體方式，並在旁邊寫下一個乾脆的*don't*。在一個正常團隊裡，最接近它的東西是一位資深評審者的事故複盤備忘——只不過這裡的備忘跑在每一次生成*之前*，而不是之後。
+
+兩句簡短的條款給出了味道。*"Two weights only: 400 regular, 500 bold. Never use 600 or 700 — they look heavy against the host UI."* 這條規則與抽象的排版無關；它關乎與一個特定宿主的表面之間的*契合*。*"Round every displayed number. JS float math leaks artifacts — `0.1 + 0.2` gives `0.30000000000000004`."* 在這句裡，模型被告知不要把自己的實作細節跨過那道接縫洩露給使用者。兩條都被寫下來，是因為模型否則就會做錯。
+
+這些都不是風格。是合規，被寫了下來。每一條視覺化的 Claude 回覆有著相同的表面——同樣的扁平、同樣的描邊圖示、同樣溫和的間距——其原因不是某種家居美學。是因為每一條都對著同一份清單生成，在一遍之內，沒有評審。
+
+這是內聯樣式那條觀察的更深一層版本。宿主無法在事後 lint 這份回覆；它只能事先把這份回覆講述出來。*Tokens* 是宿主的名詞；*spec* 是宿主的語法。兩者合起來，給了模型足夠的詞彙和足夠的約束，去產出宿主能無意外地渲染的東西。一份是介面的回覆需要一份介面契約——而當客人是一個一遍之內寫 HTML 的語言模型時，留存這份契約的唯一地方，就是模型在落筆前一刻讀到的那些詞。完整的文件，包括另外四個模組和 SVG 設定規範，作為一份[配套存檔](/imagine-suite)保留了下來。
+
+## 從文件到介面
+
+很容易把這一切讀成一場小小的格式之爭。它不是。它是回覆本身的形態在變，藉著格式變化作掩護。
+
+五年來，模型的工作是寫一份文件。使用者提問，模型寫散文，使用者讀散文。回覆是一段靜態文字；Markdown 是天然的載體。
+
+如今模型被要求做的事不一樣了。生成一段非技術同事第一遍就能跟上的解釋。產出一份團隊真會打開的 spec。擺出一份讀者能動手擺弄的比對。展示一份讀者在落定之前能編輯的設定。這些訴求沒有一個是散文能滿足的。它們由一個小小的、一次性的介面來滿足。
+
+回覆已經不再是一份文件。它正成為一個帶存活時間的介面。Markdown 將仍是原始格式。HTML 將是閱讀格式。底層資料——JSON、YAML、一行資料庫記錄——將是這兩種格式所描述的東西。這場轉向之所以幾乎不可見，是因為這三層沒有一層是新的。新的是*回覆*活在哪一層。
+
+<References>
+  <Reference href="https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html">Thariq Shihipar, "The unreasonable effectiveness of HTML", Claude Code blog, May 2026.</Reference>
+  <Reference href="https://simonwillison.net/2026/May/8/unreasonable-effectiveness-of-html/">Simon Willison, "The unreasonable effectiveness of HTML", May 2026.</Reference>
+  <Reference href="https://research.google/blog/generative-ui-a-rich-custom-visual-interactive-user-experience-for-any-prompt/">Google Research, "Generative UI: a rich, custom, visual, interactive user experience for any prompt".</Reference>
+  <Reference href="https://blog.google/products-and-platforms/products/gemini/gemini-3-gemini-app/">Google, "Gemini 3 in the Gemini app".</Reference>
+</References>

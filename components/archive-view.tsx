@@ -2,12 +2,14 @@ import { MotionLink as Link } from "./motion-link";
 import type { Essay } from "@/lib/content";
 import { groupEssaysByYear } from "@/lib/content";
 import { formatDateDotted, isoDate } from "@/lib/format";
+import { localizedPath, t, type Locale } from "@/lib/i18n";
 
 type ArchiveViewProps = {
   essays: Essay[];
+  lang: Locale;
 };
 
-export function ArchiveView({ essays }: ArchiveViewProps) {
+export function ArchiveView({ essays, lang }: ArchiveViewProps) {
   const years = groupEssaysByYear(essays);
 
   return (
@@ -25,17 +27,17 @@ export function ArchiveView({ essays }: ArchiveViewProps) {
             color: "var(--ink)",
           }}
         >
-          Essays
+          {t(lang).essaysTitle}
         </h1>
       </header>
       {years.map(({ year, entries }) => (
-        <ArchiveYear key={year} year={year} entries={entries} />
+        <ArchiveYear key={year} year={year} entries={entries} lang={lang} />
       ))}
     </>
   );
 }
 
-function ArchiveYear({ year, entries }: { year: string; entries: Essay[] }) {
+function ArchiveYear({ year, entries, lang }: { year: string; entries: Essay[]; lang: Locale }) {
   return (
     <section style={{ marginBottom: 80 }}>
       <header
@@ -77,18 +79,23 @@ function ArchiveYear({ year, entries }: { year: string; entries: Essay[] }) {
 
       <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
         {entries.map((essay, i) => (
-          <ArchiveRow key={essay.slug} essay={essay} last={i === entries.length - 1} />
+          <ArchiveRow
+            key={essay.slug}
+            essay={essay}
+            lang={lang}
+            last={i === entries.length - 1}
+          />
         ))}
       </ol>
     </section>
   );
 }
 
-function ArchiveRow({ essay, last }: { essay: Essay; last: boolean }) {
+function ArchiveRow({ essay, lang, last }: { essay: Essay; lang: Locale; last: boolean }) {
   return (
     <li className="row archive-row" style={{ borderBottom: last ? "0.5px solid var(--bone)" : "none" }}>
       <Link
-        href={`/essays/${essay.slug}`}
+        href={localizedPath(lang, `/essays/${essay.slug}`)}
         style={{
           display: "grid",
           gridTemplateColumns: "72px 1fr 100px 40px",

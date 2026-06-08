@@ -1,11 +1,12 @@
 import { site } from "@/lib/site";
+import { t, type Locale } from "@/lib/i18n";
 
 const SIZE = 420;
 const CENTER = SIZE / 2;
 const RADIUS = 160;
 const REPEATS = 10;
 
-export function Hero() {
+export function Hero({ lang }: { lang: Locale }) {
   const word = `${site.heroWord} · `;
   const text = word.repeat(REPEATS);
   const circumference = 2 * Math.PI * RADIUS;
@@ -26,7 +27,9 @@ export function Hero() {
       }}
       aria-label={site.heroWord}
     >
-      <h1 className="sr-only">{site.name} — Essays and Notes</h1>
+      <h1 className="sr-only">
+        {site.name} — {t(lang).homeTitleSuffix}
+      </h1>
       <svg
         className="hero__loop"
         width={SIZE}

@@ -2,12 +2,14 @@ import { MotionLink as Link } from "./motion-link";
 import type { Note } from "@/lib/content";
 import { groupNotesByMonth } from "@/lib/content";
 import { formatDay } from "@/lib/format";
+import { localizedPath, t, type Locale } from "@/lib/i18n";
 
 type NotesIndexProps = {
   notes: Note[];
+  lang: Locale;
 };
 
-export function NotesIndex({ notes }: NotesIndexProps) {
+export function NotesIndex({ notes, lang }: NotesIndexProps) {
   const months = groupNotesByMonth(notes);
   return (
     <>
@@ -24,17 +26,30 @@ export function NotesIndex({ notes }: NotesIndexProps) {
             color: "var(--ink)",
           }}
         >
-          Notes
+          {t(lang).notesTitle}
         </h1>
       </header>
-      {months.map(({ key, label, entries }) => (
-        <NotesMonth key={key} label={label} notes={entries} />
+      {months.map(({ key, year, month, entries }) => (
+        <NotesMonth
+          key={key}
+          label={t(lang).monthYear(year, month)}
+          notes={entries}
+          lang={lang}
+        />
       ))}
     </>
   );
 }
 
-function NotesMonth({ label, notes }: { label: string; notes: Note[] }) {
+function NotesMonth({
+  label,
+  notes,
+  lang,
+}: {
+  label: string;
+  notes: Note[];
+  lang: Locale;
+}) {
   return (
     <section style={{ marginBottom: 72 }}>
       <header
@@ -67,19 +82,19 @@ function NotesMonth({ label, notes }: { label: string; notes: Note[] }) {
 
       <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
         {notes.map((note) => (
-          <NoteRow key={note.slug} note={note} />
+          <NoteRow key={note.slug} note={note} lang={lang} />
         ))}
       </ol>
     </section>
   );
 }
 
-function NoteRow({ note }: { note: Note }) {
+function NoteRow({ note, lang }: { note: Note; lang: Locale }) {
   const day = formatDay(note.date);
   return (
     <li className="row">
       <Link
-        href={`/notes/${note.slug}`}
+        href={localizedPath(lang, `/notes/${note.slug}`)}
         style={{
           display: "grid",
           gridTemplateColumns: "100px 1fr 120px 40px",
@@ -104,7 +119,7 @@ function NoteRow({ note }: { note: Note }) {
             {day}
           </div>
           <div className="t-label" style={{ marginTop: 8 }}>
-            {note.tag}
+            {t(lang).noteTag[note.tag]}
           </div>
         </div>
 

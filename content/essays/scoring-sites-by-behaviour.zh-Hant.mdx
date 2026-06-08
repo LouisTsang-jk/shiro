@@ -1,0 +1,112 @@
+---
+n: "001"
+title: "用使用者行為給網站打分"
+date: "2026.05.20"
+excerpt: "一份 2015 年的專利、一次 2022 年的更新、一項 2024 年的垃圾內容政策，勾勒出搜尋排名無法擺脫的同一道約束。"
+tags: ["seo", "search"]
+---
+
+<Lead>這份專利給長時間停留設了上限。</Lead>不是因為 Google 不信任那些久久不走的使用者。設上限，是因為有人也許已經離開了螢幕。專利寫道，一個被打開了一小時的頁面，不該算作一小時的滿意。於是設了個天花板。
+
+這是個小細節。它藏在一份 2015 年專利裡成堆的公式之下，那份專利題為 [*Scoring Site Quality*](https://patents.google.com/patent/US9195944B1/en)（US 9,195,944 B1）。它是第一條線索，提示被測量的並不是*時間*。時間只是一個代理量。真正的對象——Google 長久以來一直想估算的東西——是使用者有沒有得到他要找的。
+
+那個對象很難命名。專利把它直白地說了出來。一旦命名，專利餘下的部分——以及 Google 此後發表的大部分內容——都朝著同一個問題傾斜。有用性無法被直接觀察。因此排名引擎用的每一個訊號都是它的代理量。而代理量並非個個都同樣廉價就能偽造。
+
+發布者能控制的訊號——關鍵字、標題、長度、結構化標記、內部連結——一個人一個下午就能推上去。由海量使用者產生的訊號則不能。一百萬個陌生人的點擊、返回、按下上一頁的時間，彼此並不協調；偽造它們的成本，會隨著引擎測量它們的規模而陡然上升。所以在任何人做出選擇之前，走向就已經定下了。一個想持續變好的搜尋引擎，必須更多地依賴那些它的對手覺得最難廉價偽造的訊號。海量行為，是手頭最密集的幾處口袋之一。
+
+## 2015 年的專利
+
+2015 年的專利，是 Google 朝那個方向移動的第一片公開切面。
+
+機制本身很樸素。使用者點開一條搜尋結果，落到一個頁面上，在某個時刻又退回搜尋結果繼續找。點擊到返回的間隔被記錄下來。如果間隔非常短，這次造訪被當作太短而無意義，丟棄。如果非常長，就套用我剛提到的那個天花板。不同的內容類型有不同的基線：人看一眼就能判斷一張圖，一分鐘能判斷一篇文章，而影片要看上一陣才行。
+
+<svg width="100%" viewBox="0 0 680 220" role="img" aria-labelledby="dwell-title dwell-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="dwell-title">How dwell time becomes a signal</title>
+  <desc id="dwell-desc">A user clicks a search result, lands on a page, and returns. The interval between click and return is the dwell signal.</desc>
+  <defs>
+    <marker id="arr-dwell" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M2 1 L8 5 L2 9" fill="none" stroke="#1a1814" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" />
+    </marker>
+  </defs>
+  <rect x="60" y="60" width="140" height="64" rx="3" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="130" y="98" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="16" fill="#1a1814">Search results</text>
+  <rect x="270" y="60" width="140" height="64" rx="3" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="340" y="98" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="16" fill="#1a1814">Page</text>
+  <rect x="480" y="60" width="140" height="64" rx="3" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="550" y="98" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="16" fill="#1a1814">Search results</text>
+  <line x1="206" y1="92" x2="264" y2="92" stroke="#1a1814" strokeWidth="0.5" markerEnd="url(#arr-dwell)" />
+  <text x="235" y="80" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">click</text>
+  <line x1="416" y1="92" x2="474" y2="92" stroke="#1a1814" strokeWidth="0.5" markerEnd="url(#arr-dwell)" />
+  <text x="445" y="80" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">return</text>
+  <line x1="206" y1="160" x2="474" y2="160" stroke="#8a8475" strokeWidth="0.5" />
+  <line x1="206" y1="160" x2="206" y2="150" stroke="#8a8475" strokeWidth="0.5" />
+  <line x1="474" y1="160" x2="474" y2="150" stroke="#8a8475" strokeWidth="0.5" />
+  <text x="340" y="184" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">DWELL INTERVAL</text>
+</svg>
+
+這些逐次造訪的測量隨後被聚合，轉化為一個*網站品質分*。不是頁面分。是網站分。
+
+## 三個細節
+
+專利裡有三個細節值得放慢來看。每一個，都是上面那道約束落到程式碼裡的樣子。
+
+第一個是**評估的單位**。專利裡的「網站」並不總是一個網域。它可以是一個子網域、一個目錄，或伺服器上一簇資源——系統覺得有用的任何分組都行。一個低品質頁面傷的不只是它所在的那個 URL。它能拖垮它所在的目錄。能拖垮子網域。能拖垮整個集合。單位向上移，是因為逐頁的行為太稀疏：大多數頁面沒有足夠的造訪量來可靠打分，而聚合到一個集合能提高訊噪比。代價是殃及壞頁面的鄰居。系統接受這筆交易。
+
+<svg width="100%" viewBox="0 0 680 240" role="img" aria-labelledby="unit-title unit-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="unit-title">Where the score is applied</title>
+  <desc id="unit-desc">A site contains subdomains, which contain directories, which contain pages. The quality score can be computed at any level of this nesting.</desc>
+  <rect x="60" y="40" width="560" height="180" rx="4" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="80" y="62" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">site</text>
+  <rect x="110" y="80" width="460" height="120" rx="4" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="130" y="102" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">subdomain</text>
+  <rect x="170" y="120" width="340" height="60" rx="4" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="190" y="142" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">directory</text>
+  <rect x="240" y="150" width="200" height="20" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="340" y="166" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#1a1814">page</text>
+</svg>
+
+第二個是**這個分影響什麼**。最自然的假設是*排名*。專利列了更多：要不要去抓取一個資源、要不要刷新它在索引裡的版本、一開始要不要把它收進索引。這個分管的是 Google 朝這個網站投放的資源，而不只是它落在結果頁的哪個位置。一個糟糕的分數不只埋掉一個頁面。它能讓爬蟲對再回來這件事失去興趣。一個集合如果不值得排名，就不值得去看。
+
+第三個是**過濾**。專利明確寫道，異常行為——古怪的點擊分布、可疑的 cookie、不規則的 user-agent 模式、被操縱的查詢——在聚合之前就被丟棄。這是抗偽造論證落地為操作：系統把自己輸入中最廉價就能偽造的那一部分扔掉，以保護其餘部分的可信度。
+
+把這些放在一起讀，它們指向某處。評估單位向上移了。倒不全是從頁面移到網站——頁面仍然被打分——但*框架*如今橫跨了一個集合。而輸入向旁邊移了：從一個頁面包含什麼，移到人們落到上面之後做了什麼。
+
+這讓一種熟悉的 SEO 變難了。關鍵字密度、連結圖譜、結構化標記——這些都是發布者推上去的。行為是從使用者那裡拉出來的。發布者能塑造頁面；他們塑造不了使用者接下來做什麼。他們可以間接地塑造，靠真正回答了查詢，那是繞遠的那條路。
+
+轉變是從最佳化訊號到最佳化結果。這兩者曾經足夠接近，以至於把前者做手腳就近似於得到後者。這份專利是若干理由之一，讓人懷疑那段距離正在拉開。
+
+## 2022 年的更新
+
+有七年時間，這條軌跡主要顯現在專利和悄無聲息的排名變動裡。2022 年 8 月，Google 把它說出了口。
+
+那篇推出[「有用內容更新」（helpful content update）](https://developers.google.com/search/blog/2022/08/helpful-content-update)的部落格文章，用大白話引入了它所稱的*全站訊號*。無用內容過多的網站，上面的頁面會表現不佳——全部頁面，而不只是那些無用的。措辭讀起來幾乎像是對專利的轉述：
+
+> 在整體上被判定含有相對大量無用內容的網站上，任何內容——不只是無用內容——都更不可能在搜尋中表現良好。
+
+那個「街區」，被點名了。
+
+同一篇文章引入了一組對立：*以人為先*的內容對*以搜尋引擎為先*的內容。對照代理量這套框架來讀，這就是發布者推 / 使用者拉的區分，換成了政策語言。隨後那份自評清單要求發布者考慮：讀者離開時是否滿意，他是否還會再來，他事後是否會再去別處搜尋更好的資訊。這些不是內容問題。它們是行為預測。發布者被要求預判使用者將會產生的那個訊號。
+
+## 2024 年的政策
+
+[2024 年 3 月](https://developers.google.com/search/blog/2024/03/core-update-spam-policies)，有用內容系統被併入了核心排名系統。文章寫得很明白：*「不再有單獨的某一個訊號或系統來做這件事。」*2022 年還是一個有名有姓的更新，如今已分散在許多系統之中。這條軌跡已經過了那個還能指著說「這是個功能」的點。
+
+同一篇文章引入了三項新的垃圾內容政策：
+
+- **過期網域濫用**——買下一個失效的網域，繼承它過往的聲譽，再在它名下掛低價值內容。
+- **規模化內容濫用**——大批量生產頁面來操縱排名，「無論內容是透過自動化、人工，還是兩者的某種組合產生的」。
+- **網站聲譽濫用**——把第三方頁面掛在一個強勢網域上、幾乎不加監管，搭它的排名訊號便車。
+
+這三者是同一個形狀。它們不是頁面級的垃圾內容。它們是*借聲譽*的企圖——借過往的聲譽、偽造的聲譽、寄生的聲譽。它們是攻擊者在評估單位升到頁面之上以後會做的事。當分數活在集合這一層，做手腳就也上移到集合。這些政策不是新點子。它們是這條軌跡要求打的補丁。
+
+## 一條線上的三個點
+
+專利、更新、政策——一條線上的三個點。一個被推著去更多依賴那些對手無法廉價偽造的訊號的系統。被向上拉到集合，是因為逐頁的行為太稀疏，自己撐不起一個分。而一旦集合成為單位，就被迫去把集合的聲譽本身當作一個攻擊面來防守。
+
+一個頁面是一個人能塑造的東西。一個網站規模化的行為足跡則不是。所以系統問發布者更少的問題，問使用者更多的問題。不是因為使用者絕無差錯——而是因為在排名運行的那個規模上，他們的回答是整個系統裡最難偽造的那部分。
+
+<References>
+  <Reference href="https://patents.google.com/patent/US9195944B1/en">Scoring Site Quality, US 9,195,944 B1, Google Inc., 2015.</Reference>
+  <Reference href="https://developers.google.com/search/blog/2022/08/helpful-content-update">"What creators should know about Google's August 2022 helpful content update", Google Search Central Blog.</Reference>
+  <Reference href="https://developers.google.com/search/blog/2024/03/core-update-spam-policies">"What web creators should know about our March 2024 core update and new spam policies", Google Search Central Blog.</Reference>
+</References>
