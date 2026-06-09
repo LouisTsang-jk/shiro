@@ -1,0 +1,101 @@
+---
+n: "005"
+title: "Spam links aren't punished, they just don't count"
+date: "2026.06.09"
+excerpt: "Three Google patents, from 2012 to 2018, trace one shift: to handle spam links, Google moved from judging and penalizing to simply not counting them."
+tags: ["seo", "search"]
+---
+
+<Lead>Google no longer decides whether a link is spam. It just makes spam not count.</Lead>
+
+Those are different things. A verdict can be wrong; not counting needs no verdict — a junk link can't enter the numerator of a ratio, and it can't move an average. This is how Google got from the first to the second, across three patents and one public shift between 2012 and 2016.
+
+## 2012: measure the ratio, then punish
+
+The early approach was a verdict plus a penalty. US 9,002,832 (filed 2012, granted 2015) does one thing: it measures what share of your inbound links are good ones, and if the share is too low it classifies the whole site as low quality and demotes every page on it.
+
+The signal is a share, not a count. The formula is `(w·vital + good) / (w·vital + good + bad)`: sort the pages linking to you into three buckets — vital, good, bad — multiply vital by a weight (the patent gives 5 to 20), and keep bad out of the numerator but inside the denominator. If the ratio drops below a threshold (the patent gives 0.05 to 0.20), the site is low quality. Two filters run before the ratio is even computed: many links from one site collapse to a single link, and links that appear only in boilerplate — a nav bar, a footer — are thrown out.
+
+So volume doesn't help; it hurts. Every junk link you buy stays in the denominator and drags the ratio down. Link farms and sitewide footer links are folded into one or discarded. The only way to improve the ratio is to actually earn good links.
+
+<svg width="100%" viewBox="0 0 680 250" role="img" aria-labelledby="ratio-title ratio-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="ratio-title">Count versus ratio</title>
+  <desc id="ratio-desc">The same inbound links read as a count of 61, which looks strong, but as a weighted ratio of good links to all links they fall to 0.14, below the 0.15 threshold, so the whole site is flagged.</desc>
+  <text x="60" y="40" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">COUNT</text>
+  <rect x="60" y="52" width="500" height="20" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="572" y="68" fontFamily="JetBrains Mono, monospace" fontSize="16" fill="#1a1814">61</text>
+  <text x="60" y="98" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">every link counts — looks strong</text>
+  <text x="60" y="146" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">RATIO</text>
+  <rect x="60" y="158" width="500" height="20" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <rect x="60" y="158" width="70" height="20" rx="2" fill="#1a1814" />
+  <line x1="135" y1="146" x2="135" y2="190" stroke="#4a463d" strokeWidth="0.5" strokeDasharray="3 3" />
+  <text x="140" y="146" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="9.5" letterSpacing="0.16em" fill="#8a8475">THRESHOLD 0.15</text>
+  <text x="572" y="174" fontFamily="JetBrains Mono, monospace" fontSize="16" fill="#1a1814">0.14</text>
+  <text x="60" y="208" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">good links over all links — below the line, the whole site is flagged</text>
+</svg>
+
+But note the last step: it punishes. It first rules that you are a low-quality site, then actively demotes you.
+
+## A penalty has to be right
+
+A penalty has a built-in problem: it has to be right. A demotion is an accusation, and accusations can miss — flagging a clean site, or letting a real manipulator through. Worse: if links pointing at you can hurt you, then in principle someone can aim junk links at you on purpose and drag you down with them.
+
+That worry produced a tool. In October 2012, Google shipped the disavow tool, which lets you declare that certain links pointing at you shouldn't count. Its existence is the tell: when bad links trigger a penalty, site owners need a shield.
+
+The result is that under this model you spend your time watching your own backlink profile, afraid of being dragged down.
+
+## 2013: make a bad link equal zero
+
+The next move removed the penalty. US 9,183,499 (filed 2013) swaps the arithmetic. It scores each site, and one input is the average quality of its neighbours — the pages linking to you, scored on their own quality and averaged.
+
+The word that matters is average. A junk link scores near zero; add it to an average and the mean barely moves. It triggers nothing. It simply doesn't contribute. The patent also widens "neighbour" to sites on the same server or sharing code, so propping yourself up from a fresh IP doesn't work either.
+
+The change is here: from the ratio of the first patent to the average of this one, the metric now absorbs the noise on its own. No verdict required — an average was never going to be moved by one fake link.
+
+## 2016: it doesn't count by default
+
+By 2016 the shift became public policy. Google folded Penguin into its core algorithm and spelled out the new behaviour: real-time, more granular, devaluing spam by adjusting ranking on the spam signals rather than penalizing the whole site. Google drew a line between the two words: demote means adjusting your rank; devalue means recognizing the junk coming at you and making sure it can't affect your ranking. The default went from punish to don't count.
+
+One edge survives: if the junk pointing at you forms a very strong pattern, Penguin can still distrust the whole site — back to the 2012 sitewide demotion. But that is the edge case, not the default.
+
+So most sites don't need disavow. Google says so itself: unless you have a manual action against you for unnatural links, leave it alone. Getting picked up by a spam directory falls under "doesn't count," and you can ignore it.
+
+## Even relevance gets capped
+
+The furthest step has nothing to do with links. Google's 2018 information-gain patents (US 11,354,342 and its family) score each document from 0 to 1: relative to what you have already read, how much new information does this one add? A full duplicate is 0; entirely new is 1. The score is recomputed for each user and each session.
+
+There is no penalty here, and no verdict about who is spam. A document that merely repeats what you have already seen earns nothing, even if it is highly relevant to the query, and it gets pushed out of the list. Rewrite one article ten times and seed it everywhere, and under this logic it all comes to zero.
+
+So even being relevant no longer keeps you in the results. Redundancy isn't punished. It just doesn't count.
+
+## Three steps, one direction
+
+Put the three together: in 2012, a verdict and a penalty; in 2013, a bad link contributes zero to an average; in 2018, redundant content scores zero outright. The penalty retreats, step by step, and arithmetic takes its place.
+
+<svg width="100%" viewBox="0 0 680 200" role="img" aria-labelledby="arc-title arc-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="arc-title">From demotion to devaluation</title>
+  <desc id="arc-desc">Three points on one line: in 2012 a low ratio demotes the whole site; between 2013 and 2016 a bad link simply contributes nothing; by 2018 redundant content scores zero on information gain.</desc>
+  <line x1="130" y1="96" x2="550" y2="96" stroke="#1a1814" strokeWidth="0.5" />
+  <circle cx="130" cy="96" r="4" fill="#1a1814" />
+  <circle cx="340" cy="96" r="4" fill="#1a1814" />
+  <circle cx="550" cy="96" r="4" fill="#1a1814" />
+  <text x="130" y="74" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">2012</text>
+  <text x="340" y="74" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">2013–2016</text>
+  <text x="550" y="74" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">2018</text>
+  <text x="130" y="126" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="11" letterSpacing="0.18em" fill="#1a1814">DEMOTE</text>
+  <text x="340" y="126" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="11" letterSpacing="0.18em" fill="#1a1814">DEVALUE</text>
+  <text x="550" y="126" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="11" letterSpacing="0.18em" fill="#1a1814">CAP</text>
+  <text x="130" y="150" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">judge it bad, penalize the site</text>
+  <text x="340" y="150" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">a bad link contributes nothing</text>
+  <text x="550" y="150" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">redundant content scores zero</text>
+</svg>
+
+A defense is at its most mature when it no longer needs to be right. A penalty assumes you read the intent correctly, it misfires, and it pushes site owners to hunt for a shield. Making spam not count assumes nothing — it is just what a ratio or an average does to noise. The hardest anti-spam to evade isn't a smarter detector. It is a metric under which spam has no weight. You can't change a ratio by piling on.
+
+<References>
+  <Reference href="https://patents.google.com/patent/US9002832B1/en">Classifying Sites as Low Quality Sites, US 9,002,832 B1, Google Inc., 2015.</Reference>
+  <Reference href="https://patents.google.com/patent/US9183499B1/en">Evaluating Quality Based on Neighbor Features, US 9,183,499 B1, Google Inc., 2015.</Reference>
+  <Reference href="https://patents.google.com/patent/US11354342B2/en">Contextual Estimation of Link Information Gain, US 11,354,342 B2, Google LLC, 2022.</Reference>
+  <Reference href="https://developers.google.com/search/blog/2016/09/penguin-is-now-part-of-our-core">"Penguin is now part of our core algorithm", Google Search Central Blog, 2016.</Reference>
+  <Reference href="https://developers.google.com/search/blog/2012/10/a-new-tool-to-disavow-links">"A new tool to disavow links", Google Search Central Blog, 2012.</Reference>
+</References>

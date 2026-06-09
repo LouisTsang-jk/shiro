@@ -1,0 +1,101 @@
+---
+n: "005"
+title: "Google 怎麼處理垃圾外部連結:從懲罰到無視"
+date: "2026.06.09"
+excerpt: "三份 Google 專利,從 2012 到 2018,串起同一個轉向:對付垃圾外部連結,Google 從判定加懲罰,走到預設讓它不算數。"
+tags: ["seo", "search"]
+---
+
+<Lead>Google 不再判定一條外部連結是不是垃圾,它只是讓垃圾不算數。</Lead>
+
+這兩件事不一樣。判定要冒判錯的風險;不算數不用判對——一條垃圾外部連結進不了一個比例的分子,也拉不動一個平均數。這篇講 Google 怎麼從前者走到後者,用三份專利和一次 2012 到 2016 的公開轉向。
+
+## 2012 年:算比例,然後罰
+
+最早的做法是判定加懲罰。US 9,002,832(2012 年申請,2015 年授權)只做一件事:算你的外部連結裡好連結佔多大比例,比例太低就把整站判為低品質,壓低它每一頁的排名。
+
+注意是比例,不是數量。公式是 `(w·vital + good) / (w·vital + good + bad)`:把指向你的頁面按品質分成 vital、good、bad 三檔,vital 乘一個權重(專利舉例 5 到 20),bad 不進分子,但留在分母。比例低於閾值(專利舉例 0.05 到 0.20)就判低品質。算比例之前還有兩道過濾:同一個網站指過來的一堆連結只算一條,只出現在導覽列、頁尾這種模板區的連結直接丟掉。
+
+所以呢:堆量沒用,反而有害。你買的每條垃圾外部連結都留在分母裡,把比例往下拉;站群和全站頁尾連結,要麼被折成一條,要麼被丟。唯一能改善比例的辦法,是真的拿到好連結。
+
+<svg width="100%" viewBox="0 0 680 250" role="img" aria-labelledby="ratio-title ratio-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="ratio-title">Count versus ratio</title>
+  <desc id="ratio-desc">The same inbound links read as a count of 61, which looks strong, but as a weighted ratio of good links to all links they fall to 0.14, below the 0.15 threshold, so the whole site is flagged.</desc>
+  <text x="60" y="40" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">COUNT</text>
+  <rect x="60" y="52" width="500" height="20" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="572" y="68" fontFamily="JetBrains Mono, monospace" fontSize="16" fill="#1a1814">61</text>
+  <text x="60" y="98" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">every link counts — looks strong</text>
+  <text x="60" y="146" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">RATIO</text>
+  <rect x="60" y="158" width="500" height="20" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <rect x="60" y="158" width="70" height="20" rx="2" fill="#1a1814" />
+  <line x1="135" y1="146" x2="135" y2="190" stroke="#4a463d" strokeWidth="0.5" strokeDasharray="3 3" />
+  <text x="140" y="146" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="9.5" letterSpacing="0.16em" fill="#8a8475">THRESHOLD 0.15</text>
+  <text x="572" y="174" fontFamily="JetBrains Mono, monospace" fontSize="16" fill="#1a1814">0.14</text>
+  <text x="60" y="208" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">good links over all links — below the line, the whole site is flagged</text>
+</svg>
+
+但記住這套的最後一步是「罰」:它先判定你是低品質站,再主動壓你。
+
+## 懲罰要承擔判錯的代價
+
+懲罰有個內在問題:它必須判對。一個降權是一項指控,指控會錯——把正常站判成低品質,或者反過來漏掉真作弊的。更麻煩的是,既然別人指向你的連結能害你,那理論上有人可以故意拿垃圾連結砸你,把你拖下水。
+
+這種擔心催生了一個工具。2012 年 10 月,Google 上線 disavow,讓你主動聲明「這些指向我的連結別算」。它的存在本身說明了問題:當壞連結會觸發懲罰,站長就需要一個擋箭牌。
+
+結果是,在這套範式下你得一直盯著自己的外部連結畫像,怕被連累。
+
+## 2013 年:讓壞連結等於零
+
+下一步是把懲罰去掉。US 9,183,499(2013 年申請)換了個演算法:它給每個站算品質分,其中一項輸入是「鄰居的平均品質」——指向你的那些頁面,拿它們自己的品質分取個平均。
+
+關鍵在「平均」。一條垃圾連結的品質分接近零,你把它加進一個平均數,均值幾乎不動。它不觸發任何懲罰,它只是不貢獻。這份專利還把「鄰居」擴大到同一台伺服器、共用程式碼的網站,所以換個 IP 自己給自己撐分也不成立。
+
+變化在這裡:從前一份專利的「比例」到這份的「均值」,度量自己把雜訊吸收掉了。不需要先判定你壞——一個平均數本來就不會被一條假連結打動。
+
+## 2016 年:預設就不算
+
+到 2016 年,這個轉向變成了公開政策。Google 把 Penguin 併進核心演算法,把新做法說清楚了:即時、更細粒度,透過調整排名給垃圾降值,而不是懲罰整個網站。Google 把兩個詞分開:demote 是調你的排名,devalue 是認出衝過來的垃圾、確保它影響不了排名。預設動作從「罰」變成了「不算」。
+
+有個邊角沒消失:如果指向你的垃圾連結構成一個極強的模式,Penguin 仍然會整站 distrust,退回到 2012 年那種整站降權。但那是邊緣情況,不是預設。
+
+所以呢:大多數站不需要 disavow。Google 自己也這麼說——除非你收到了針對垃圾外部連結的人工處罰,否則別碰它。被垃圾站收錄,落在「不算」這一檔,基本不用管。
+
+## 連相關都封頂
+
+最徹底的一步,已經不關連結的事了。Google 2018 年的一組資訊增益專利(US 11,354,342 等)給每篇文件算一個 0 到 1 的分:相對於你已經讀過的內容,這篇還能帶來多少新資訊。完全重複是 0,全新是 1。這個分對每個使用者、每次會話單獨重算。
+
+這裡沒有懲罰,也沒有判定誰是垃圾。一篇內容只要和你已讀的重複,哪怕它和查詢高度相關,在重算裡也拿不到分,直接被擠出列表。把一篇文章改寫十遍鋪出去,在這套邏輯下全部歸零。
+
+落到經營網站上:連「相關」都不再保證你留在結果裡。冗餘不再被罰,它只是不算數。
+
+## 三步是同一個方向
+
+把這三步連起來:2012 年判定加懲罰,2013 年壞連結對均值貢獻零,2018 年冗餘內容直接得零分。懲罰一步步退場,換成算術。
+
+<svg width="100%" viewBox="0 0 680 200" role="img" aria-labelledby="arc-title arc-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="arc-title">From demotion to devaluation</title>
+  <desc id="arc-desc">Three points on one line: in 2012 a low ratio demotes the whole site; between 2013 and 2016 a bad link simply contributes nothing; by 2018 redundant content scores zero on information gain.</desc>
+  <line x1="130" y1="96" x2="550" y2="96" stroke="#1a1814" strokeWidth="0.5" />
+  <circle cx="130" cy="96" r="4" fill="#1a1814" />
+  <circle cx="340" cy="96" r="4" fill="#1a1814" />
+  <circle cx="550" cy="96" r="4" fill="#1a1814" />
+  <text x="130" y="74" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">2012</text>
+  <text x="340" y="74" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">2013–2016</text>
+  <text x="550" y="74" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">2018</text>
+  <text x="130" y="126" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="11" letterSpacing="0.18em" fill="#1a1814">DEMOTE</text>
+  <text x="340" y="126" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="11" letterSpacing="0.18em" fill="#1a1814">DEVALUE</text>
+  <text x="550" y="126" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="11" letterSpacing="0.18em" fill="#1a1814">CAP</text>
+  <text x="130" y="150" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">judge it bad, penalize the site</text>
+  <text x="340" y="150" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">a bad link contributes nothing</text>
+  <text x="550" y="150" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">redundant content scores zero</text>
+</svg>
+
+一項防禦最成熟的形態,是它不再需要判對。懲罰預設你認對了意圖,會誤傷,也逼著站長找擋箭牌;讓垃圾不算數什麼都不預設,那只是一個比例或一個平均數對雜訊的正常反應。最難繞過的反作弊,不是更聰明的偵測器,而是一個讓垃圾沒有重量的度量。你沒法靠堆量改變一個比例。
+
+<References>
+  <Reference href="https://patents.google.com/patent/US9002832B1/en">Classifying Sites as Low Quality Sites, US 9,002,832 B1, Google Inc., 2015.</Reference>
+  <Reference href="https://patents.google.com/patent/US9183499B1/en">Evaluating Quality Based on Neighbor Features, US 9,183,499 B1, Google Inc., 2015.</Reference>
+  <Reference href="https://patents.google.com/patent/US11354342B2/en">Contextual Estimation of Link Information Gain, US 11,354,342 B2, Google LLC, 2022.</Reference>
+  <Reference href="https://developers.google.com/search/blog/2016/09/penguin-is-now-part-of-our-core">"Penguin is now part of our core algorithm", Google Search Central Blog, 2016.</Reference>
+  <Reference href="https://developers.google.com/search/blog/2012/10/a-new-tool-to-disavow-links">"A new tool to disavow links", Google Search Central Blog, 2012.</Reference>
+</References>
