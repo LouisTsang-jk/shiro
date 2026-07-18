@@ -1,0 +1,489 @@
+---
+n: "006"
+title: "Amdahl's law assumes the workers are interchangeable"
+date: "2026.07.17"
+excerpt: "Splitting a render across two rented machines made it slower, and the logs had been writing down why in a field nobody read."
+read: "9 min"
+tags: ["infrastructure", "performance"]
+---
+
+<Lead>A three-minute lyric video takes about three and a half minutes to render on one rented machine.</Lead> The machine runs on Railway, a service that rents computers by the minute. It has 24 vCPU — 24 shared processor cores. The job never changes: 187.84 seconds of audio, 5,635 frames, 1080p at 30 frames per second.
+
+On one machine, that job finishes in about 217.5 seconds. Slower than sitting through the video it draws. So the export is worth speeding up.
+
+Remotion, the library that turns the frames into a video, documents a faster path. Split the frames into two halves. Send each half to its own machine. Render both at once, then stitch the halves into one file.
+
+The math is not subtle. Two machines, half the work each, half the time. So the plan is simple: rent the second machine, split the job, wait half as long.
+
+## It came back slower
+
+Two machines of twelve rendered the video in 337.5 seconds. One machine did it in 217.5. Same total compute, split in half, and 55.2% slower.
+
+<svg width="100%" viewBox="0 0 680 361" role="img" aria-labelledby="bars-title bars-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="bars-title">Wall clock per configuration against the realtime reference</title>
+  <desc id="bars-desc">Horizontal bars showing end-to-end wall clock for thirteen benchmark runs of a 187.84 second lyric video, grouped into four configurations: a concurrency sweep on the 32-core host (350.9, 323.0, 317.2 and 323.2 seconds), three runs at concurrency 16 on the 48-core host (222.4, 221.1 and 209.0 seconds), three distributed runs across two 24 vCPU services (197.0, 196.3 and 179.1 seconds), and three distributed runs across two 12 vCPU services at equal total compute (335.0, 338.0 and 339.5 seconds). A vertical hairline marks 187.84 seconds of realtime; only the 179.1 second run falls to its left. Two span annotations mark a 9.6 percent spread bought by concurrency tuning and a 32.1 percent gap between the mean of each host class at concurrency 16.</desc>
+  <defs>
+    <marker id="arr-bars" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M2 1 L8 5 L2 9" fill="none" stroke="#1a1814" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" />
+    </marker>
+  </defs>
+
+  <text x="371.5" y="13" textAnchor="end" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">REAL TIME</text>
+  <text x="381" y="13" textAnchor="start" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">187.84s</text>
+  <line x1="376" y1="20" x2="376" y2="339" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="160" y1="44" x2="160" y2="339" stroke="#b8b1a1" strokeWidth="0.5" />
+
+  <text x="544.2" y="32" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">CONCURRENCY −9.6%</text>
+  <line x1="524.8" y1="38" x2="563.5" y2="38" stroke="#1a1814" strokeWidth="0.5" markerStart="url(#arr-bars)" markerEnd="url(#arr-bars)" />
+  <line x1="563.5" y1="40" x2="563.5" y2="48" stroke="#b8b1a1" strokeWidth="0.5" strokeDasharray="2 3" />
+  <line x1="524.8" y1="40" x2="524.8" y2="82" stroke="#b8b1a1" strokeWidth="0.5" strokeDasharray="2 3" />
+
+  <text x="40" y="40" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">32-CORE HOST · CONCURRENCY SWEEP</text>
+
+  <text x="150" y="56" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">c8</text>
+  <rect x="160" y="48" width="403.5" height="10" rx="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="640" y="56" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">350.9s</text>
+
+  <text x="150" y="73" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">c12</text>
+  <rect x="160" y="65" width="371.5" height="10" rx="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="640" y="73" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">323.0s</text>
+
+  <text x="150" y="90" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">c16</text>
+  <rect x="160" y="82" width="364.8" height="10" rx="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="640" y="90" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">317.2s</text>
+
+  <text x="150" y="107" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">c16</text>
+  <rect x="160" y="99" width="371.7" height="10" rx="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="640" y="107" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">323.2s</text>
+
+  <text x="469.2" y="121" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">HOST CLASS −32.1%</text>
+  <line x1="410.1" y1="127" x2="528.2" y2="127" stroke="#1a1814" strokeWidth="0.5" markerStart="url(#arr-bars)" markerEnd="url(#arr-bars)" />
+  <line x1="528.2" y1="111" x2="528.2" y2="125" stroke="#b8b1a1" strokeWidth="0.5" strokeDasharray="2 3" />
+  <line x1="410.1" y1="129" x2="410.1" y2="141" stroke="#b8b1a1" strokeWidth="0.5" strokeDasharray="2 3" />
+
+  <text x="40" y="135" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">48-CORE HOST · C16</text>
+
+  <text x="150" y="151" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">run 1</text>
+  <rect x="160" y="143" width="255.8" height="10" rx="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="640" y="151" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">222.4s</text>
+
+  <text x="150" y="168" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">run 2</text>
+  <rect x="160" y="160" width="254.3" height="10" rx="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="640" y="168" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">221.1s</text>
+
+  <text x="150" y="185" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">run 3</text>
+  <rect x="160" y="177" width="240.4" height="10" rx="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="640" y="185" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">209.0s</text>
+
+  <text x="40" y="209" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">2 × 24 VCPU DISTRIBUTED · C16</text>
+
+  <text x="150" y="225" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">run 1</text>
+  <rect x="160" y="217" width="226.6" height="10" rx="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="640" y="225" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">197.0s</text>
+
+  <text x="150" y="242" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">run 2</text>
+  <rect x="160" y="234" width="225.7" height="10" rx="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="640" y="242" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">196.3s</text>
+
+  <text x="150" y="259" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">run 3</text>
+  <rect x="160" y="251" width="206.0" height="10" rx="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="640" y="259" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">179.1s</text>
+
+  <text x="390" y="275" textAnchor="start" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="12" fill="#4a463d">1 of 13 runs finishes under realtime</text>
+
+  <text x="40" y="283" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">2 × 12 VCPU DISTRIBUTED · C8 · EQUAL COMPUTE</text>
+
+  <text x="150" y="299" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">run 1</text>
+  <rect x="160" y="291" width="385.3" height="10" rx="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="640" y="299" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">335.0s</text>
+
+  <text x="150" y="316" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">run 2</text>
+  <rect x="160" y="308" width="388.7" height="10" rx="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="640" y="316" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">338.0s</text>
+
+  <text x="150" y="333" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">run 3</text>
+  <rect x="160" y="325" width="390.4" height="10" rx="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="640" y="333" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">339.5s</text>
+</svg>
+
+Tuning had bought almost nothing next to this. Sweeping concurrency — how many frames a machine renders at once — from 8 to 16 bought 9.6%. Then the same job landed on a faster physical host and ran 32.1% quicker, with no change to any setting. Which machine you drew mattered 3.3 times more than every knob.
+
+The obvious reading is that splitting made it slower, so splitting is a bad idea. The experiment killed distributed rendering on that number, and the kill was right. It was right for reasons the experiment did not yet have.
+
+## It wasn't the protocol
+
+The first suspect is the split itself. Maybe splitting a render is simply broken.
+
+It is not. On two machines of 24 vCPU, the two halves finished in 115.7 seconds against 217.5 on one — a 1.880× speedup on double the compute. That is 94.0% parallel efficiency: how close to a perfect doubling the split got, near the ceiling arithmetic allows.
+
+The output agrees. Every full render produced a file of exactly 36,218,049 bytes, across both host classes, cold and warm. Every distributed run produced 36,306,871 bytes — 0.245% larger, the price of stitching two halves. Concurrency moves speed by 10%, the host by 47%, and not one output byte moves.
+
+The split is clean. Whatever cost the 55% was added after the frames were drawn.
+
+## It wasn't the network
+
+The next suspect is the network. Two machines have to move the chunks between them, and moving data takes time.
+
+It takes 0.3 to 0.4 seconds. The network is not it either.
+
+The real constant is one function. After both halves render, one machine runs `combineChunks()` — the step that stitches the two files into one. It ran 46.3 to 65.8 seconds every time: 31.9% of the whole job. Without it, two machines beat one by 44.0%. With it, by 12.3%. The seam ate 32 of those 44 points.
+
+<svg width="100%" viewBox="0 0 680 270" role="img" aria-labelledby="seam-title seam-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="seam-title">Where the distributed win goes</title>
+  <desc id="seam-desc">Three bars compare one 24 vCPU machine at 217.5 seconds against two machines. The two-machine chunk phase finishes in 115.7 seconds, a 1.880 times speedup at 94.0 percent parallel efficiency. End to end, the same run takes 190.8 seconds, because a hatched seam block of combineChunks work runs after the chunks are done. The cross-machine chunk download costs 0.3 to 0.4 seconds and is under a pixel wide at this scale.</desc>
+  <defs>
+    <marker id="arr-seam" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M2 1 L8 5 L2 9" fill="none" stroke="#1a1814" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" />
+    </marker>
+    <pattern id="hatch-seam" patternUnits="userSpaceOnUse" width="6" height="6">
+      <path d="M0 6 L6 0" fill="none" stroke="#b8b1a1" strokeWidth="0.5" />
+    </pattern>
+  </defs>
+
+  <text x="60" y="36" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">ONE MACHINE, 24 VCPU</text>
+  <rect x="60" y="44" width="480" height="20" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="548" y="59" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">217.5s</text>
+
+  <text x="60" y="92" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">TWO MACHINES, CHUNK PHASE</text>
+  <rect x="60" y="100" width="255.3" height="20" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="324" y="115" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">115.7s</text>
+  <text x="60" y="138" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">1.880× on 2× compute — 94.0% parallel efficiency</text>
+
+  <text x="60" y="164" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">TWO MACHINES, END TO END</text>
+  <text x="330" y="164" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="12" fill="#4a463d">chunk download: 0.3–0.4s — under a pixel here</text>
+  <polyline points="326,160 316,160 316,171" fill="none" stroke="#4a463d" strokeWidth="0.5" markerEnd="url(#arr-seam)" />
+  <rect x="60" y="174" width="255.3" height="20" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <rect x="315.3" y="174" width="165.7" height="20" rx="2" stroke="#4a463d" strokeWidth="0.5" strokeDasharray="3 3" fill="url(#hatch-seam)" />
+  <text x="489" y="189" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">190.8s</text>
+
+  <path d="M315.3 200 L315.3 206 L481 206 L481 200" fill="none" stroke="#8a8475" strokeWidth="0.5" />
+  <text x="398" y="222" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">COMBINECHUNKS() 52–66S</text>
+  <text x="60" y="244" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">The seam ate 32 of 44 points: 44.0% faster without it, 12.3% with it.</text>
+</svg>
+
+Remotion marks the spot itself. Its combineChunks page carries a note: "This is a hard-to-use API that most people should not use directly." The warning sits on the exact step that cost the win — not on distribution, which worked. The library named the part that broke.
+
+One result stays open. combineChunks always ran on the same machine. The smaller, slower 12 vCPU box stitched faster than the bigger 24 vCPU one: 46.32 to 46.38 seconds against 52.1 to 65.8. Same output to the byte, on half the cores, with a tighter tail. Nobody knows why.
+
+But the seam is a constant, and it is not large. It cannot explain a 55% headline, nor one distributed run finishing in 179 seconds while another never came under 335. Something else was moving, machine to machine, and nothing in the plan had named it.
+
+## The field the logs were writing down
+
+Every run wrote a log. One field in it, unread until now, had been recording the answer the whole time.
+
+The field is `cpus`. It comes from `os.cpus()`, a call that asks the operating system how many cores it has. Inside a container — a fenced-off slice of a bigger machine — that call reads past the fence and returns the whole host's cores, not the slice you rented.
+
+<svg width="100%" viewBox="0 0 680 276" role="img" aria-labelledby="cpus-title cpus-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="cpus-title">One broken reading doing two jobs</title>
+  <desc id="cpus-desc">A container running under a cgroup quota of 24 vCPU sits inside a host with 48 physical cores. A call to os.cpus() inside the container reads straight through the container boundary and returns 48, the host's core count, not the quota. A dashed leader marks the point on the container edge where the reading should have stopped. The same reading then feeds two things at once: it is logged as a cpus field, an accidental host fingerprint, and it sets the default concurrency at os.cpus() divided by 2, which is 24 — the setting that always failed.</desc>
+  <defs>
+    <marker id="arr-cpus" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M2 1 L8 5 L2 9" fill="none" stroke="#1a1814" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" />
+    </marker>
+  </defs>
+
+  <rect x="40" y="20" width="600" height="146" rx="4" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="54" y="38" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">HOST — 48 PHYSICAL CORES</text>
+
+  <rect x="64" y="50" width="240" height="94" rx="3" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="76" y="68" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">CONTAINER — CGROUP QUOTA 24 VCPU</text>
+
+  <rect x="84" y="84" width="100" height="32" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="134" y="105" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">os.cpus()</text>
+
+  <line x1="190" y1="100" x2="462" y2="100" stroke="#1a1814" strokeWidth="0.5" markerEnd="url(#arr-cpus)" />
+  <text x="372" y="90" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">reads through</text>
+  <text x="470" y="106" fontFamily="JetBrains Mono, monospace" fontSize="16" fill="#1a1814">48</text>
+  <text x="498" y="106" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">cores on the host</text>
+
+  <polyline points="304,102 322,130 334,130" fill="none" stroke="#8a8475" strokeWidth="0.5" strokeDasharray="2 3" />
+  <text x="340" y="134" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="12" fill="#4a463d">where the reading should have stopped</text>
+
+  <polyline points="134,116 134,184 165,184 165,196" fill="none" stroke="#1a1814" strokeWidth="0.5" markerEnd="url(#arr-cpus)" />
+  <polyline points="165,184 481,184 481,196" fill="none" stroke="#1a1814" strokeWidth="0.5" markerEnd="url(#arr-cpus)" />
+
+  <rect x="40" y="200" width="250" height="52" rx="3" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="165" y="222" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">logged as cpus —</text>
+  <text x="165" y="240" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">an accidental host fingerprint</text>
+
+  <rect x="322" y="200" width="318" height="52" rx="3" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="481" y="222" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">default concurrency = os.cpus() / 2 = 24</text>
+  <text x="481" y="240" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#4a463d">the setting that always failed</text>
+</svg>
+
+So the field fingerprints the physical host. Across the seven full renders, every slow run logged 32 cores and every fast run logged 48. There is no overlap. cpus=32 renders in 317 to 351 seconds; cpus=48 in 209 to 222. That is 1.472× on wall clock. It repeats at another size: two 12 vCPU machines splitting the same job run 278.0 seconds against 188.9, 1.472× again. Two sizes, one ratio.
+
+The variance was never noise. It was a two-class draw, written into every record the service kept. Railway hands you one host or the other, and the slow class runs 1.472× behind the fast one. Which one you draw is settled before the first frame renders.
+
+The same misread does a second thing. Remotion's `renderMedia()` — the call that renders the frames — defaults concurrency to half the cores it sees. In a container, half of a wrong number.
+
+A 48-core draw defaults to 24, well past the 16 that ran fastest. A 32-core draw defaults to 16 exactly. The default is a coin flip, and it lands wrong on the faster host. Nobody hit it, because the experiment always passed concurrency by hand.
+
+The field explained the variance. What it did not do was add up the slowdown — and that took three more numbers.
+
+## Where the 120 seconds went
+
+The gap is 120.0 seconds, and it comes apart cleanly.
+
+The fast machine finished its half in 188.9 seconds, then sat idle for 89.1 seconds — 74.2% of the gap — waiting for the slow machine to finish. The seam added 53.6 seconds, 44.6%. Those over-count, because the smaller box gave back about 22.6 seconds of its own efficiency. So 89.1 + 53.6 − 22.6 = 120.1, against a measured 120.0. Three fields never fitted to each other close to a tenth of a second.
+
+<svg width="100%" viewBox="0 0 680 330" role="img" aria-labelledby="gantt-title gantt-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="gantt-title">One 2×12 run, in time</title>
+  <desc id="gantt-desc">A timeline of a single distributed render across two twelve-vCPU machines. Chunk 0 draws a 32-core host and runs 278.0 seconds; chunk 1 draws a 48-core host and finishes its work in 188.9 seconds, then sits idle for 89.1 seconds waiting for chunk 0. combineChunks() then runs for 53.6 seconds, ending at 337.5 seconds. A single 24-vCPU machine finishes the same render in 217.5 seconds. A dashed line marks 242.4 seconds, the arithmetic best case in which both machines draw the fast host — a figure calculated, not measured.</desc>
+  <defs>
+    <pattern id="hatch-gantt" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#b8b1a1" strokeWidth="0.5" />
+    </pattern>
+  </defs>
+
+  <text x="60" y="20" textAnchor="start" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">0</text>
+  <text x="142.9" y="20" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">50</text>
+  <text x="225.7" y="20" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">100</text>
+  <text x="308.6" y="20" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">150</text>
+  <text x="391.4" y="20" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">200</text>
+  <text x="474.3" y="20" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">250</text>
+  <text x="557.1" y="20" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">300</text>
+  <text x="640" y="20" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">350</text>
+
+  <line x1="60" y1="26" x2="60" y2="32" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="142.9" y1="26" x2="142.9" y2="32" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="225.7" y1="26" x2="225.7" y2="32" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="308.6" y1="26" x2="308.6" y2="32" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="391.4" y1="26" x2="391.4" y2="32" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="474.3" y1="26" x2="474.3" y2="32" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="557.1" y1="26" x2="557.1" y2="32" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="640" y1="26" x2="640" y2="32" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="60" y1="32" x2="640" y2="32" stroke="#b8b1a1" strokeWidth="0.5" />
+
+  <text x="60" y="54" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">CHUNK 0 — CPUS=32</text>
+  <text x="640" y="54" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">combineChunks()</text>
+
+  <rect x="60" y="62" width="460.7" height="20" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="514" y="76" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">278.0s</text>
+
+  <rect x="520.7" y="62" width="98.6" height="70" rx="3" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="570" y="101" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">53.6s</text>
+
+  <text x="60" y="104" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">CHUNK 1 — CPUS=48</text>
+
+  <rect x="373" y="112" width="147.7" height="20" fill="url(#hatch-gantt)" stroke="none" />
+  <rect x="60" y="112" width="460.7" height="20" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <line x1="373" y1="112" x2="373" y2="132" stroke="#1a1814" strokeWidth="0.5" />
+  <text x="367" y="126" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">188.9s</text>
+
+  <line x1="373" y1="144" x2="520.7" y2="144" stroke="#8a8475" strokeWidth="0.5" />
+  <line x1="373" y1="140" x2="373" y2="148" stroke="#8a8475" strokeWidth="0.5" />
+  <line x1="520.7" y1="140" x2="520.7" y2="148" stroke="#8a8475" strokeWidth="0.5" />
+  <text x="379" y="164" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">IDLE</text>
+  <text x="411" y="164" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">89.1s</text>
+
+  <text x="586" y="164" textAnchor="end" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">END TO END</text>
+  <text x="640" y="164" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">337.5s</text>
+
+  <line x1="60" y1="190" x2="640" y2="190" stroke="#b8b1a1" strokeWidth="0.5" />
+
+  <text x="60" y="212" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">ONE MACHINE, 24 VCPU</text>
+  <rect x="60" y="220" width="360.4" height="20" rx="2" stroke="#1a1814" strokeWidth="0.5" fill="none" />
+  <text x="415" y="234" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">217.5s</text>
+
+  <line x1="461.7" y1="32" x2="461.7" y2="252" stroke="#4a463d" strokeWidth="0.5" strokeDasharray="3 3" />
+  <text x="461.7" y="266" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">242.4s</text>
+  <text x="461.7" y="284" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">both machines fast — the best case</text>
+  <text x="461.7" y="302" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">ARITHMETIC, NOT MEASURED</text>
+</svg>
+
+For 89 seconds of every equal-compute run, a machine billed by the minute sat doing nothing.
+
+Give both machines the fast class and the run lands at 242.4 seconds: 11.5% behind one machine, not 55.2%. That figure is arithmetic, not a measurement — no such fair-draw run was ever recorded. A retry erases 44 of the 55 points. The number that killed distribution was mostly a coin.
+
+The recovery has a stronger form, and it still loses. The split handed each machine half the frames, not half the speed. Match the split to the measured rates — 10.14 frames per second on the slow box, 14.91 on the fast — and the run still lands near 278.5 seconds, 28.1% behind. Even a perfect split loses. Equal compute is hostile by definition: half the frames on half the compute barely moves the stitch, so the seam is added for free.
+
+The evidence has holes, and they run one way. Every logged row is a success, because the harness records only wins — so every failure survives as prose, not data. The published figure even put the loss at 52%, by comparing the distributed average against the single slowest fast run, not the average.
+
+The concurrency sweep ran once per setting, so "16 is best" does not survive its own noise. The timing poll charged the distributed runs twice. Even the 24 vCPU is the dashboard's number, not one the logs ever recorded. Every correction available makes distribution look better than the number that killed it.
+
+The test asked distribution to reach 80% of single-machine time — to be at least a fifth faster. It measured 155%.
+
+<svg width="100%" viewBox="0 0 680 256" role="img" aria-labelledby="killline-title killline-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="killline-title">The margin the reasoning error had to cross</title>
+  <desc id="killline-desc">A number line measured in percent of single-machine wall clock. A pre-committed kill line sits at 80 percent: distributed rendering had to be 20 percent faster to survive. The measured distributed result lands at 155 percent, shown as a solid mark. Correcting the reasoning error moves the answer to 111 percent for a fair host draw and 128 percent for a perfect speed-proportional split; both are arithmetic, not measured, and are shown as open marks. The whole correction is worth 44 points, against a 75-point margin to the kill line, so every corrected answer still fails.</desc>
+
+  <text x="640" y="32" textAnchor="end" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">PERCENT OF SINGLE-MACHINE WALL CLOCK</text>
+  <text x="640" y="47.75" textAnchor="end" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">OPEN MARKS ARITHMETIC, NOT MEASURED</text>
+
+  <text x="40" y="32" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">
+    <tspan x="40">THE PRE-COMMITTED KILL LINE</tspan>
+    <tspan x="40" dy="1.5em">20% FASTER OR DISTRIBUTED IS DEAD</tspan>
+  </text>
+
+  <line x1="173.6" y1="60" x2="173.6" y2="134" stroke="#1a1814" strokeWidth="0.5" />
+
+  <text x="334.3" y="78" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">fair host draw (arithmetic)</text>
+  <text x="562.3" y="78" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#1a1814">measured</text>
+  <text x="422.4" y="98" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="14" fill="#4a463d">perfect speed-proportional split</text>
+
+  <text x="334.3" y="118" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="16" fill="#1a1814">111%</text>
+  <text x="422.4" y="118" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="16" fill="#1a1814">128%</text>
+  <text x="562.3" y="118" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="16" fill="#1a1814">155%</text>
+
+  <line x1="334.3" y1="124" x2="334.3" y2="134" stroke="#1a1814" strokeWidth="0.5" strokeDasharray="2 3" />
+  <line x1="422.4" y1="124" x2="422.4" y2="134" stroke="#1a1814" strokeWidth="0.5" strokeDasharray="2 3" />
+  <line x1="562.3" y1="124" x2="562.3" y2="134" stroke="#1a1814" strokeWidth="0.5" />
+
+  <line x1="70" y1="134" x2="640" y2="134" stroke="#b8b1a1" strokeWidth="0.5" />
+
+  <line x1="121.8" y1="134" x2="121.8" y2="139" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="225.5" y1="134" x2="225.5" y2="139" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="329.1" y1="134" x2="329.1" y2="139" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="432.7" y1="134" x2="432.7" y2="139" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="536.4" y1="134" x2="536.4" y2="139" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="640" y1="134" x2="640" y2="139" stroke="#b8b1a1" strokeWidth="0.5" />
+
+  <line x1="70" y1="134" x2="70" y2="141" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="173.6" y1="134" x2="173.6" y2="141" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="277.3" y1="134" x2="277.3" y2="141" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="380.9" y1="134" x2="380.9" y2="141" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="484.5" y1="134" x2="484.5" y2="141" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="588.2" y1="134" x2="588.2" y2="141" stroke="#b8b1a1" strokeWidth="0.5" />
+
+  <circle cx="334.3" cy="134" r="2.5" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <circle cx="422.4" cy="134" r="2.5" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <circle cx="562.3" cy="134" r="2.5" fill="#1a1814" />
+
+  <text x="70" y="157" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">60%</text>
+  <text x="173.6" y="157" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">80%</text>
+  <text x="277.3" y="157" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">100%</text>
+  <text x="380.9" y="157" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">120%</text>
+  <text x="484.5" y="157" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">140%</text>
+  <text x="588.2" y="157" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">160%</text>
+
+  <path d="M334.3 178 V172 H562.3 V178" fill="none" stroke="#8a8475" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round" />
+  <text x="448.3" y="194" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">THE ENTIRE REASONING ERROR — 44 POINTS</text>
+
+  <path d="M562.3 212 V206 H173.6 V212" fill="none" stroke="#8a8475" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round" />
+  <text x="368" y="228" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">MARGIN — 75 POINTS</text>
+</svg>
+
+The whole reasoning error was worth 44 points against that 75-point margin. Correcting it moves the answer from no to no.
+
+## Amdahl's law assumes the workers are interchangeable
+
+There is a name for the ceiling all of this kept hitting. Amdahl's law: divide the part you can parallelise by the number of machines, and the part you cannot — the seam — does not move. Spread 217.5 seconds of work across two machines and you still cannot land under the ~55-second stitch.
+
+The law is right. The seam is the floor.
+
+But the law assumes one thing this experiment broke. It assumes the workers are interchangeable — cores in a box you own, the same every run. A machine rented by the minute is not a worker. It is a draw from a pool with two classes, 1.472× apart.
+
+<svg width="100%" viewBox="0 0 680 322" role="img" aria-labelledby="draw-title draw-desc" style={{ display: "block", margin: "48px auto" }}>
+  <title id="draw-title">Two host classes, measured, and the worst-of-N penalty, modelled</title>
+  <desc id="draw-desc">On the left, seven single-machine runs at 24 vCPU and six half-chunks at 12 vCPU each split into two clusters by the cpus field, with an empty corridor between them and a 1.47 times gap that reproduces at both machine sizes. On the right, a modelled curve of the expected penalty against the number of machines, rising from 1.134 at N equals 1 to 1.438 at N equals 8 and converging on a dashed asymptote at 1.47 times, labelled the slow machine. The curve assumes 2 slow draws in 7 and is a model, not measurement.</desc>
+  <defs>
+    <marker id="arr-draw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M2 1 L8 5 L2 9" fill="none" stroke="#1a1814" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" />
+    </marker>
+  </defs>
+
+  <text x="40" y="52" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">MEASURED</text>
+
+  <text x="60" y="66" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="11.5" fill="#4a463d">24 vCPU · one machine · 7 runs</text>
+
+  <text x="114" y="82" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#1a1814">cpus=48</text>
+  <text x="274" y="82" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#1a1814">cpus=32</text>
+
+  <line x1="101.9" y1="90" x2="101.9" y2="106" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="119.4" y1="90" x2="119.4" y2="106" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="121.2" y1="90" x2="121.2" y2="106" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="258.2" y1="90" x2="258.2" y2="106" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="266.6" y1="90" x2="266.6" y2="106" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="266.8" y1="90" x2="266.8" y2="106" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="306.8" y1="90" x2="306.8" y2="106" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="60" y1="106" x2="320" y2="106" fill="none" stroke="#b8b1a1" strokeWidth="0.5" />
+
+  <line x1="121.2" y1="106" x2="121.2" y2="120" fill="none" stroke="#b8b1a1" strokeWidth="0.5" strokeDasharray="2 3" />
+  <line x1="258.2" y1="106" x2="258.2" y2="120" fill="none" stroke="#b8b1a1" strokeWidth="0.5" strokeDasharray="2 3" />
+  <line x1="124" y1="120" x2="255.4" y2="120" fill="none" stroke="#1a1814" strokeWidth="0.5" markerStart="url(#arr-draw)" markerEnd="url(#arr-draw)" />
+
+  <text x="114" y="140" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">209–222s</text>
+  <text x="190" y="141" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="16" fill="#1a1814">1.47×</text>
+  <text x="274" y="140" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">317–351s</text>
+
+  <text x="60" y="176" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="11.5" fill="#4a463d">12 vCPU · half-chunks of a 2×12 split</text>
+
+  <text x="73" y="192" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#1a1814">cpus=48</text>
+  <text x="201.5" y="192" textAnchor="middle" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="13" fill="#1a1814">cpus=32</text>
+
+  <line x1="71.0" y1="200" x2="71.0" y2="216" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="73.4" y1="200" x2="73.4" y2="216" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="74.0" y1="200" x2="74.0" y2="216" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="200.5" y1="200" x2="200.5" y2="216" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="202.0" y1="200" x2="202.0" y2="216" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="202.1" y1="200" x2="202.1" y2="216" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <line x1="60" y1="216" x2="320" y2="216" fill="none" stroke="#b8b1a1" strokeWidth="0.5" />
+
+  <line x1="74.0" y1="216" x2="74.0" y2="230" fill="none" stroke="#b8b1a1" strokeWidth="0.5" strokeDasharray="2 3" />
+  <line x1="200.5" y1="216" x2="200.5" y2="230" fill="none" stroke="#b8b1a1" strokeWidth="0.5" strokeDasharray="2 3" />
+  <line x1="76.8" y1="230" x2="197.7" y2="230" fill="none" stroke="#1a1814" strokeWidth="0.5" markerStart="url(#arr-draw)" markerEnd="url(#arr-draw)" />
+
+  <text x="73" y="250" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">188–190s</text>
+  <text x="137" y="251" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="16" fill="#1a1814">1.47×</text>
+  <text x="201.5" y="250" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">277–278s</text>
+
+  <line x1="340" y1="44" x2="340" y2="262" fill="none" stroke="#b8b1a1" strokeWidth="0.5" />
+
+  <text x="390" y="52" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">MODELLED</text>
+  <text x="390" y="70" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="11.5" fill="#4a463d">expected slowdown of a split vs one machine</text>
+
+  <line x1="390" y1="97.6" x2="630" y2="97.6" fill="none" stroke="#1a1814" strokeWidth="0.5" strokeDasharray="3 3" />
+  <text x="630" y="91" textAnchor="end" fontFamily="EB Garamond, serif" fontStyle="italic" fontSize="12" fill="#4a463d">1.47× — the slow machine</text>
+
+  <line x1="390" y1="90" x2="390" y2="216" fill="none" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="390" y1="216" x2="630" y2="216" fill="none" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="386" y1="216" x2="390" y2="216" fill="none" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="386" y1="153" x2="390" y2="153" fill="none" stroke="#b8b1a1" strokeWidth="0.5" />
+  <line x1="386" y1="90" x2="390" y2="90" fill="none" stroke="#b8b1a1" strokeWidth="0.5" />
+  <text x="384" y="220" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">1.00</text>
+  <text x="384" y="157" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">1.25</text>
+  <text x="384" y="94" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">1.50</text>
+
+  <polyline points="400,182.2 460,158.0 520,128.4 580,105.6" fill="none" stroke="#1a1814" strokeWidth="0.5" strokeLinejoin="round" />
+  <circle cx="400" cy="182.2" r="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <circle cx="460" cy="158.0" r="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <circle cx="520" cy="128.4" r="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+  <circle cx="580" cy="105.6" r="2" fill="none" stroke="#1a1814" strokeWidth="0.5" />
+
+  <text x="408" y="196" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">1.134</text>
+  <text x="468" y="172" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">1.230</text>
+  <text x="528" y="142" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">1.348</text>
+  <text x="588" y="120" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">1.438</text>
+
+  <text x="400" y="230" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">1</text>
+  <text x="460" y="230" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">2</text>
+  <text x="520" y="230" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">4</text>
+  <text x="580" y="230" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" fill="#1a1814">8</text>
+  <text x="490" y="248" textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">N MACHINES</text>
+
+  <text x="40" y="294" fontFamily="Inter, sans-serif" fontWeight="300" fontSize="10.5" letterSpacing="0.18em" fill="#8a8475">MODEL ASSUMES 2 SLOW DRAWS IN 7. THE RIGHT-HAND CURVE IS A MODEL, NOT MEASUREMENT.</text>
+</svg>
+
+Rented machines add a term the law never had. One machine draws once; run it enough times and it averages out to the mean. N machines draw N times per run, and the run ends when the slowest of them finishes.
+
+That is not the mean of N draws. It is the maximum. And the maximum only worsens as you add machines, because each new machine is another chance to hit the slow class.
+
+The draw here came up slow twice in seven — an estimate with an enormous interval, one provider, one afternoon. The clamping holds for any chance above zero. The shape is the claim; the values are an illustration.
+
+So the three terms pull apart. Split further and the division improves, the seam holds, the draw degrades. Only one of the three buys anything when you spend more. You can retry a draw; you cannot retry a maximum.
+
+The rule carries with no video in it. A split pays when the work you can actually remove, `T_single · (1 − 1/N)`, beats the seam. Here 217.5 × 0.5 = 108.7 seconds of removable work against a ~55-second seam, so it clears — barely. It buys 12.3% of wall clock at roughly double the cost: $0.037 to $0.039 on one machine against about $0.07 on two.
+
+And distribution's luckiest run beats a single machine's average draw by 4.4 seconds — 1.8%. That is the entire prize for two services, a chunk contract, a file protocol, and a stitching step.
+
+Run the rule backwards and it gets worse. Halve the cost per frame, from any cause, and one machine drops from 217.5 to about 110 seconds while the seam stays ~55. Then 110 × 0.5 = 55, and the split stops paying at all. Cheaper frames make splitting pointless — the seam never shrinks when the work does.
+
+A split is a division. A seam is a constant. The machines are a draw. Only the first improves when you spend more. You can average a hundred draws. You cannot average a maximum.
+
+<References>
+  <Reference href="https://www.remotion.dev/docs/distributed-rendering">"Distributed rendering", Remotion documentation.</Reference>
+  <Reference href="https://www.remotion.dev/docs/renderer/combine-chunks">"combineChunks()", Remotion documentation.</Reference>
+  <Reference href="https://www.remotion.dev/docs/renderer/render-media">"renderMedia()", Remotion documentation.</Reference>
+  <Reference href="https://docs.railway.com/reference/pricing">"Pricing", Railway documentation.</Reference>
+</References>
